@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Expendora",
+    "slug": "expendora-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#0A0A0F"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.expendora.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0A0F"
+      },
+      "package": "com.expendora.mobile"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-asset"
+    ]
+  }
+}
