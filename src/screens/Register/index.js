@@ -4,7 +4,7 @@ import { User, Mail, Lock, ArrowRight, Apple } from 'lucide-react-native';
 import { InputField } from '../../components/InputField';
 import { CustomButton } from '../../components/CustomButton';
 import { colors } from '../../theme/colors';
-import { isValidEmail, isValidPassword, isValidName } from '../../utils/validators';
+import { isValidEmail, isValidPassword, isValidName } from '../../utils/validator';
 
 export function RegisterScreen({ onRegister, onSwitchToLogin }) {
   const [name, setName] = useState('');
