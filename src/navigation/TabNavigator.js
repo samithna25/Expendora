@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Home, ListTree, ScanLine, PieChart, User } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import { colors as themeColors } from '../theme/colors';
 import { DashboardScreen } from '../screens/Dashboard';
@@ -11,9 +12,10 @@ import { ProfileScreen } from '../screens/Profile';
 
 const Tab = createBottomTabNavigator();
 
-function ScanTabButton({ children, onPress }) {
+function ScanTabButton() {
+  const navigation = useNavigation();
   return (
-    <TouchableOpacity onPress={onPress} style={styles.scanBtn}>
+    <TouchableOpacity onPress={() => navigation.navigate('UploadReceipt')} style={styles.scanBtn}>
       <View style={styles.scanInner}>
         <ScanLine size={24} color={themeColors.black} strokeWidth={2.5} />
       </View>
@@ -65,9 +67,15 @@ export function TabNavigator() {
         name="Scan"
         component={DashboardScreen}
         options={{
-          tabBarButton: (props) => <ScanTabButton {...props} />,
+          tabBarButton: () => <ScanTabButton />,
           tabBarLabel: 'Scan',
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('UploadReceipt');
+          },
+        })}
       />
       <Tab.Screen
         name="Reports"
