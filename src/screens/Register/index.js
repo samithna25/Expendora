@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { User, Mail, Lock, ArrowRight, Apple } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
 import { InputField } from '../../components/InputField';
 import { CustomButton } from '../../components/CustomButton';
 import { colors } from '../../theme/colors';
 import { isValidEmail, isValidPassword, isValidName } from '../../utils/validator';
+import { useAuth } from '../../context/AuthContext';
 
-export function RegisterScreen({ onRegister, onSwitchToLogin }) {
+export function RegisterScreen() {
+  const { register } = useAuth();
+  const navigation = useNavigation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,9 +27,9 @@ export function RegisterScreen({ onRegister, onSwitchToLogin }) {
 
     setLoading(true);
     try {
-      await onRegister(name, email, password);
-    } catch {
-      setErrors({ general: 'Registration failed. Try again.' });
+      await register(name, email, password);
+    } catch (e) {
+      setErrors({ general: e.message || 'Registration failed. Try again.' });
     } finally {
       setLoading(false);
     }
@@ -99,7 +103,7 @@ export function RegisterScreen({ onRegister, onSwitchToLogin }) {
           </View>
         </View>
 
-        <TouchableOpacity onPress={onSwitchToLogin} style={styles.switchRow}>
+        <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.switchRow}>
           <Text style={styles.switchText}>
             Already have an account?{' '}
             <Text style={styles.switchLink}>Sign In</Text>

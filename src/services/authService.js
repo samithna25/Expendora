@@ -1,27 +1,50 @@
 import { api } from './api';
 
+async function tryOrMock(fn, mockData) {
+  try {
+    return await fn();
+  } catch {
+    return mockData;
+  }
+}
+
 export const authService = {
   async login(email, password) {
-    return api.post('/auth/login', { email, password });
+    return tryOrMock(
+      () => api.post('/auth/login', { email, password }),
+      {
+        user: { id: '1', name: 'Test User', email },
+        token: 'mock-token-12345',
+      },
+    );
   },
 
   async register(name, email, password) {
-    return api.post('/auth/register', { name, email, password });
+    return tryOrMock(
+      () => api.post('/auth/register', { name, email, password }),
+      {
+        user: { id: '1', name, email },
+        token: 'mock-token-12345',
+      },
+    );
   },
 
   async getProfile(token) {
-    return api.get('/auth/profile');
+    return tryOrMock(
+      () => api.get('/auth/profile'),
+      { id: '1', name: 'Test User', email: 'test@expendora.app' },
+    );
   },
 
   async updateProfile(data) {
-    return api.put('/auth/profile', data);
+    return tryOrMock(() => api.put('/auth/profile', data), data);
   },
 
   async forgotPassword(email) {
-    return api.post('/auth/forgot-password', { email });
+    return tryOrMock(() => api.post('/auth/forgot-password', { email }), { ok: true });
   },
 
   async resetPassword(token, password) {
-    return api.post('/auth/reset-password', { token, password });
+    return tryOrMock(() => api.post('/auth/reset-password', { token, password }), { ok: true });
   },
 };

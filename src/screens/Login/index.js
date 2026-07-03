@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Mail, Lock, ArrowRight, Apple } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
 import { InputField } from '../../components/InputField';
 import { CustomButton } from '../../components/CustomButton';
 import { colors } from '../../theme/colors';
 import { isValidEmail } from '../../utils/validator';
+import { useAuth } from '../../context/AuthContext';
 
-export function LoginScreen({ onLogin, onSwitchToRegister, onForgotPassword }) {
+export function LoginScreen() {
+  const { login } = useAuth();
+  const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -21,9 +25,9 @@ export function LoginScreen({ onLogin, onSwitchToRegister, onForgotPassword }) {
 
     setLoading(true);
     try {
-      await onLogin(email, password);
-    } catch {
-      setErrors({ general: 'Invalid credentials' });
+      await login(email, password);
+    } catch (e) {
+      setErrors({ general: e.message || 'Invalid credentials' });
     } finally {
       setLoading(false);
     }
@@ -60,7 +64,7 @@ export function LoginScreen({ onLogin, onSwitchToRegister, onForgotPassword }) {
             error={errors.password}
           />
 
-          <TouchableOpacity onPress={onForgotPassword} style={styles.forgotRow}>
+          <TouchableOpacity onPress={() => {}} style={styles.forgotRow}>
             <Text style={styles.forgotText}>Forgot password?</Text>
           </TouchableOpacity>
 
@@ -93,7 +97,7 @@ export function LoginScreen({ onLogin, onSwitchToRegister, onForgotPassword }) {
           </View>
         </View>
 
-        <TouchableOpacity onPress={onSwitchToRegister} style={styles.switchRow}>
+        <TouchableOpacity onPress={() => navigation.navigate('Register')} style={styles.switchRow}>
           <Text style={styles.switchText}>
             Don't have an account?{' '}
             <Text style={styles.switchLink}>Sign Up</Text>
