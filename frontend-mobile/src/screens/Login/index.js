@@ -1,35 +1,33 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { User, Mail, Lock, ArrowRight, Apple } from 'lucide-react-native';
+import { Mail, Lock, ArrowRight, Apple } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { InputField } from '../../components/InputField';
 import { CustomButton } from '../../components/CustomButton';
 import { colors } from '../../theme/colors';
-import { isValidEmail, isValidPassword, isValidName } from '../../utils/validator';
+import { isValidEmail } from '../../utils/validators';
 import { useAuth } from '../../context/AuthContext';
 
-export function RegisterScreen() {
-  const { register } = useAuth();
+export function LoginScreen() {
+  const { login } = useAuth();
   const navigation = useNavigation();
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async () => {
+  const handleLogin = async () => {
     const errs = {};
-    if (!isValidName(name)) errs.name = 'Name must be at least 2 characters';
     if (!isValidEmail(email)) errs.email = 'Valid email required';
-    if (!isValidPassword(password)) errs.password = 'Password must be 6+ characters';
+    if (!password || password.length < 6) errs.password = 'Password must be 6+ characters';
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
     setLoading(true);
     try {
-      await register(name, email, password);
+      await login(email, password);
     } catch (e) {
-      setErrors({ general: e.message || 'Registration failed. Try again.' });
+      setErrors({ general: e.message || 'Invalid credentials' });
     } finally {
       setLoading(false);
     }
@@ -44,19 +42,11 @@ export function RegisterScreen() {
         <Text style={styles.logo}>EXPENDORA</Text>
 
         <View style={styles.headerText}>
-          <Text style={styles.title}>Create account</Text>
-          <Text style={styles.subtitle}>Start tracking smarter in seconds</Text>
+          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.subtitle}>Sign in to your financial command center</Text>
         </View>
 
         <View style={styles.card}>
-          <InputField
-            icon={User}
-            placeholder="Full name"
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
-            error={errors.name}
-          />
           <InputField
             icon={Mail}
             placeholder="Email address"
@@ -74,13 +64,17 @@ export function RegisterScreen() {
             error={errors.password}
           />
 
+          <TouchableOpacity onPress={() => {}} style={styles.forgotRow}>
+            <Text style={styles.forgotText}>Forgot password?</Text>
+          </TouchableOpacity>
+
           {errors.general && (
             <Text style={styles.generalError}>{errors.general}</Text>
           )}
 
           <CustomButton
-            title="Create Account"
-            onPress={handleRegister}
+            title="Sign In"
+            onPress={handleLogin}
             variant="gold"
             loading={loading}
             icon={ArrowRight}
@@ -103,10 +97,10 @@ export function RegisterScreen() {
           </View>
         </View>
 
-        <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.switchRow}>
+        <TouchableOpacity onPress={() => navigation.navigate('Register')} style={styles.switchRow}>
           <Text style={styles.switchText}>
-            Already have an account?{' '}
-            <Text style={styles.switchLink}>Sign In</Text>
+            Don't have an account?{' '}
+            <Text style={styles.switchLink}>Sign Up</Text>
           </Text>
         </TouchableOpacity>
 
@@ -158,7 +152,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: 32,
   },
   title: {
     fontSize: 24,
@@ -177,6 +171,15 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
     backgroundColor: 'rgba(255,255,255,0.05)',
     padding: 20,
+  },
+  forgotRow: {
+    alignItems: 'flex-end',
+    marginBottom: 12,
+  },
+  forgotText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.gold,
   },
   generalError: {
     color: '#EF4444',
@@ -221,7 +224,7 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   switchRow: {
-    marginTop: 20,
+    marginTop: 24,
     alignItems: 'center',
   },
   switchText: {
@@ -233,7 +236,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   terms: {
-    marginTop: 20,
+    marginTop: 24,
     fontSize: 10,
     color: 'rgba(255,255,255,0.4)',
     textAlign: 'center',

@@ -2,5 +2,16 @@ node_modules/
 .expo/
 .env
 *.log
-expostart_error.txt
-expostart_output.txt
+
+# frontend-mobile
+frontend-mobile/node_modules/
+frontend-mobile/.expo/
+
+# backend
+backend/venv/
+backend/__pycache__/
+backend/app/__pycache__/
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/tests/__pycache__/
+*.pyc
