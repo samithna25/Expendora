@@ -40,6 +40,8 @@ const plotW = CHART_W - PADDING.left - PADDING.right;
 const plotH = CHART_H - PADDING.top - PADDING.bottom;
 
 function SpendingTrendChart({ data }) {
+  const { isDark } = useTheme();
+  const colorScheme = isDark ? 'dark' : 'light';
   const maxVal = Math.max(...data.map((d) => d.spent));
   const minVal = Math.min(...data.map((d) => d.spent));
   const range = maxVal - minVal || 1;
@@ -56,7 +58,7 @@ function SpendingTrendChart({ data }) {
 
   return (
     <Svg width={CHART_W} height={CHART_H}>
-      <Path d={areaPath} fill="rgba(250,204,21,0.2)" />
+      <Path d={areaPath} fill={isDark ? 'rgba(250,204,21,0.12)' : 'rgba(250,204,21,0.2)'} />
       <Path d={linePath} stroke={themeColors.gold} strokeWidth={2.5} fill="none" />
       {points.map((p, i) => (
         <Circle key={i} cx={p.x} cy={p.y} r={3} fill={themeColors.gold} />
@@ -68,7 +70,7 @@ function SpendingTrendChart({ data }) {
           y={CHART_H - 4}
           textAnchor="middle"
           fontSize={10}
-          fill={themeColors.muted.light}
+          fill={themeColors.muted[colorScheme]}
         >
           {d.m}
         </SvgText>
@@ -78,17 +80,19 @@ function SpendingTrendChart({ data }) {
 }
 
 function BudgetBar({ name, spent, limit, color }) {
+  const { isDark } = useTheme();
+  const colorScheme = isDark ? 'dark' : 'light';
   const pct = Math.min(100, (spent / limit) * 100);
   const over = pct >= 95;
   return (
     <View style={styles.budgetRow}>
       <View style={styles.budgetLabelRow}>
-        <Text style={[styles.budgetName, { color: themeColors.foreground.light }]}>{name}</Text>
-        <Text style={[styles.budgetAmount, over ? { color: themeColors.warning, fontWeight: '700' } : { color: themeColors.muted.light }]}>
+        <Text style={[styles.budgetName, { color: themeColors.foreground[colorScheme] }]}>{name}</Text>
+        <Text style={[styles.budgetAmount, over ? { color: themeColors.warning, fontWeight: '700' } : { color: themeColors.muted[colorScheme] }]}>
           ${spent} / ${limit}
         </Text>
       </View>
-      <View style={[styles.budgetBarBg, { backgroundColor: themeColors.secondary.light }]}>
+      <View style={[styles.budgetBarBg, { backgroundColor: themeColors.secondary[colorScheme] }]}>
         <View
           style={[
             styles.budgetBarFill,
@@ -102,15 +106,16 @@ function BudgetBar({ name, spent, limit, color }) {
 
 export function ReportsScreen() {
   const { isDark } = useTheme();
+  const colorScheme = isDark ? 'dark' : 'light';
   const [periodIndex, setPeriodIndex] = useState(1);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: themeColors.background.light }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: themeColors.background[colorScheme] }]} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={[styles.title, { color: themeColors.foreground.light }]}>Reports</Text>
-            <Text style={[styles.subtitle, { color: themeColors.muted.light }]}>Cloud-synced analytics</Text>
+            <Text style={[styles.title, { color: themeColors.foreground[colorScheme] }]}>Reports</Text>
+            <Text style={[styles.subtitle, { color: themeColors.muted[colorScheme] }]}>Cloud-synced analytics</Text>
           </View>
           <TouchableOpacity style={styles.pdfBtn}>
             <Download size={14} color={themeColors.black} />
@@ -118,14 +123,14 @@ export function ReportsScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={[styles.tabRow, { backgroundColor: themeColors.secondary.light }]}>
+        <View style={[styles.tabRow, { backgroundColor: themeColors.secondary[colorScheme] }]}>
           {PERIOD_TABS.map((t, i) => (
             <TouchableOpacity
               key={t}
               onPress={() => setPeriodIndex(i)}
-              style={[styles.tab, i === periodIndex && styles.tabActive]}
+              style={[styles.tab, i === periodIndex && { backgroundColor: themeColors.card[colorScheme] }]}
             >
-              <Text style={[styles.tabText, i === periodIndex && { fontWeight: '600' }, i !== periodIndex && { color: themeColors.muted.light }]}>
+              <Text style={[styles.tabText, i === periodIndex && { fontWeight: '600' }, i !== periodIndex && { color: themeColors.muted[colorScheme] }]}>
                 {t}
               </Text>
             </TouchableOpacity>
@@ -133,12 +138,12 @@ export function ReportsScreen() {
         </View>
       </View>
 
-      <View style={[styles.card, { borderColor: themeColors.border.light, backgroundColor: themeColors.card.light }]}>
+      <View style={[styles.card, { borderColor: themeColors.border[colorScheme], backgroundColor: themeColors.card[colorScheme] }]}>
         <View style={styles.trendHeader}>
           <View>
-            <Text style={[styles.cardLabel, { color: themeColors.muted.light }]}>Spending Trend</Text>
-            <Text style={[styles.trendValue, { color: themeColors.foreground.light }]}>
-              $1,283<Text style={[styles.trendSub, { color: themeColors.muted.light }]}>/1,500</Text>
+            <Text style={[styles.cardLabel, { color: themeColors.muted[colorScheme] }]}>Spending Trend</Text>
+            <Text style={[styles.trendValue, { color: themeColors.foreground[colorScheme] }]}>
+              $1,283<Text style={[styles.trendSub, { color: themeColors.muted[colorScheme] }]}>/1,500</Text>
             </Text>
           </View>
           <View style={styles.trendBadge}>
@@ -149,13 +154,13 @@ export function ReportsScreen() {
         <SpendingTrendChart data={mockMonthlyTrend} />
       </View>
 
-      <View style={[styles.card, { borderColor: themeColors.border.light, backgroundColor: themeColors.card.light }]}>
-        <Text style={[styles.cardTitle, { color: themeColors.foreground.light }]}>Category Breakdown</Text>
+      <View style={[styles.card, { borderColor: themeColors.border[colorScheme], backgroundColor: themeColors.card[colorScheme] }]}>
+        <Text style={[styles.cardTitle, { color: themeColors.foreground[colorScheme] }]}>Category Breakdown</Text>
         <CategoryChart data={mockSpendingByCategory} />
       </View>
 
-      <View style={[styles.card, { borderColor: themeColors.border.light, backgroundColor: themeColors.card.light }]}>
-        <Text style={[styles.cardTitle, { color: themeColors.foreground.light }]}>Budget Performance</Text>
+      <View style={[styles.card, { borderColor: themeColors.border[colorScheme], backgroundColor: themeColors.card[colorScheme] }]}>
+        <Text style={[styles.cardTitle, { color: themeColors.foreground[colorScheme] }]}>Budget Performance</Text>
         <View style={styles.budgetList}>
           {mockBudgets.map((b) => (
             <BudgetBar key={b.id} {...b} />
@@ -190,7 +195,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   tab: { flex: 1, paddingVertical: 6, borderRadius: 12, alignItems: 'center' },
-  tabActive: { backgroundColor: themeColors.card.light },
   tabText: { fontSize: 12, fontWeight: '500' },
   card: {
     marginHorizontal: 20,
