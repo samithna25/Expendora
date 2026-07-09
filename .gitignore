@@ -1,6 +1,0 @@
-node_modules/
-.expo/
-.env
-*.log
-expostart_error.txt
-expostart_output.txt
