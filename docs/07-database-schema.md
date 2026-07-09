@@ -134,40 +134,6 @@ Stores every expense recorded by a user.
 
 ---
 
-# Collection 3 – Budgets
-
-Stores monthly budgets created by users.
-
-### Fields
-
-| Field        | Type     | Description      |
-| ------------ | -------- | ---------------- |
-| _id          | ObjectId | Budget ID        |
-| userId       | ObjectId | User reference   |
-| category     | String   | Budget category  |
-| monthlyLimit | Double   | Monthly budget   |
-| currentSpent | Double   | Current spending |
-| month        | String   | Budget month     |
-| year         | Integer  | Budget year      |
-
----
-
-## Example Document
-
-```json
-{
-  "_id": "ObjectId",
-  "userId": "ObjectId",
-  "category": "Food",
-  "monthlyLimit": 30000,
-  "currentSpent": 18500,
-  "month": "July",
-  "year": 2026
-}
-```
-
----
-
 # Collection 4 – Reports
 
 Stores generated monthly reports.

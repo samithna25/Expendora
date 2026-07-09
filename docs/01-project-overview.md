@@ -101,7 +101,6 @@ This application is designed for:
 - Monthly expense summary
 - Category-wise spending
 - Spending trends
-- Budget monitoring
 
 ## Automation
 
