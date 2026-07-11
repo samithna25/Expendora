@@ -34,7 +34,7 @@ def register_user(data):
         }), 400
 
     db = get_db()
-    if db and db.users.find_one({'email': email}):
+    if db is not None and db.users.find_one({'email': email}) is not None:
         return jsonify({
             'status': 'error',
             'message': 'User already exists'
@@ -47,7 +47,7 @@ def register_user(data):
         'created_at': datetime.utcnow()
     }
 
-    if db:
+    if db is not None:
         db.users.insert_one(user_data)
 
     return jsonify({
@@ -69,7 +69,7 @@ def login_user(data):
     password = data['password']
 
     db = get_db()
-    if db:
+    if db is not None:
         user = db.users.find_one({'email': email})
         if user and check_password_hash(user['password'], password):
             return jsonify({
