@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from app.database.db import connect_db
 from app.routes.auth_routes import init_routes
+from app.routes.receipt_routes import init_receipt_routes
 
 def create_app():
     app = Flask(__name__)
@@ -10,6 +11,7 @@ def create_app():
 
     # Initialize routes
     init_routes(app)
+    init_receipt_routes(app)
 
     @app.route('/health', methods=['GET'])
     def health_check():
