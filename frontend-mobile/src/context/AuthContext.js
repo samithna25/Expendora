@@ -3,9 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AUTH_TOKEN_KEY } from '../utils/constants';
 import { authService } from '../services/authService';
 
-const DEV_MODE = true;
-const DEV_TOKEN = 'dev-jwt-token';
-const DEV_USER = { name: 'Alex Morgan', email: 'alex@expendora.com' };
+const DEV_MODE = false;
 
 const AuthContext = createContext();
 
@@ -20,15 +18,6 @@ export function AuthProvider({ children }) {
 
   const loadStoredAuth = async () => {
     try {
-      if (DEV_MODE) {
-        const storedToken = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
-        if (storedToken) {
-          setToken(storedToken);
-          setUser(DEV_USER);
-        }
-        setLoading(false);
-        return;
-      }
       const storedToken = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
       if (storedToken) {
         setToken(storedToken);
@@ -43,12 +32,6 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (_email, _password) => {
-    if (DEV_MODE) {
-      setUser(DEV_USER);
-      setToken(DEV_TOKEN);
-      await AsyncStorage.setItem(AUTH_TOKEN_KEY, DEV_TOKEN);
-      return;
-    }
     const { user: userData, token: newToken } = await authService.login(_email, _password);
     setUser(userData);
     setToken(newToken);
@@ -56,12 +39,6 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (_name, _email, _password) => {
-    if (DEV_MODE) {
-      setUser(DEV_USER);
-      setToken(DEV_TOKEN);
-      await AsyncStorage.setItem(AUTH_TOKEN_KEY, DEV_TOKEN);
-      return;
-    }
     const { user: userData, token: newToken } = await authService.register(_name, _email, _password);
     setUser(userData);
     setToken(newToken);
