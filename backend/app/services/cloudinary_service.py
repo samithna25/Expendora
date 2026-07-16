@@ -15,14 +15,14 @@ def upload_receipt_image(file_path):
     try:
         result = cloudinary.uploader.upload(
             file_path,
-            folder="expendora/receipts",   # Organises uploads into a subfolder
-            resource_type="image",         # Tells Cloudinary this is an image
-            overwrite=False,               # Never silently overwrite existing files
+            folder="expendora/receipts",   
+            resource_type="image",         
+            overwrite=False,              
         )
 
         return {
-            "secure_url": result["secure_url"],   # e.g. https://res.cloudinary.com/...
-            "public_id":  result["public_id"],    # e.g. expendora/receipts/abc123
+            "secure_url": result["secure_url"],   
+            "public_id":  result["public_id"],    
         }
 
     except Exception as e:

@@ -22,3 +22,25 @@ def connect_db():
 
 def get_db():
     return db
+
+
+# ─────────────────────────────────────────────
+# Receipt database operations
+# ─────────────────────────────────────────────
+
+def save_receipt(receipt_doc):
+    if db is None:
+        raise Exception("Database not connected. Call connect_db() first.")
+
+    result = db["receipts"].insert_one(receipt_doc)
+    return str(result.inserted_id)
+
+
+def get_receipts_by_user(user_id):
+    if db is None:
+        raise Exception("Database not connected. Call connect_db() first.")
+
+    receipts = db["receipts"].find(
+        {"user_id": user_id}
+    ).sort("uploaded_at", -1)   
+    return list(receipts)
