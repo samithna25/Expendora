@@ -1,6 +1,8 @@
+import Constants from 'expo-constants';
+
 export const APP_NAME = 'Expendora';
 export const APP_VERSION = '1.0.0';
-export const API_BASE_URL = __DEV__ ? 'http://192.168.1.104:5000' : 'https://api.expendora.app';
+export const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl ?? 'http://localhost:5000';
 
 export const ONBOARDING_STORAGE_KEY = '@expendora_onboarding_done';
 export const AUTH_TOKEN_KEY = '@expendora_auth_token';

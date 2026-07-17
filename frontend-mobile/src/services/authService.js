@@ -10,23 +10,13 @@ async function tryOrMock(fn, mockData) {
 
 export const authService = {
   async login(email, password) {
-    return tryOrMock(
-      () => api.post('/auth/login', { email, password }),
-      {
-        user: { id: '1', name: 'Test User', email },
-        token: 'mock-token-12345',
-      },
-    );
+    const response = await api.post('/auth/login', { email, password });
+    return response.data;
   },
 
   async register(name, email, password) {
-    return tryOrMock(
-      () => api.post('/auth/register', { name, email, password }),
-      {
-        user: { id: '1', name, email },
-        token: 'mock-token-12345',
-      },
-    );
+    const response = await api.post('/auth/register', { name, email, password });
+    return response.data;
   },
 
   async getProfile(token) {
