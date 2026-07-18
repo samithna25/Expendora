@@ -12,14 +12,16 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from app.database.db import connect_db, get_db, seed_merchant
 
 MERCHANTS = [
+    # ─── Grocery ───
+    ("Keells", ["keells", "keels", "keells super", "keells supermarket", "keells food city"], "Grocery"),
+    ("Cargills", ["cargills", "cargills food city", "food city"], "Grocery"),
+    ("Arpico", ["arpico", "arpico super"], "Grocery"),
+    ("Sathosa", ["sathosa", "lanka sathosa"], "Grocery"),
+    ("Glomark", ["glomark"], "Grocery"),
+    ("SPAR", ["spar"], "Grocery"),
+    ("Laugfs Super", ["laugfs super", "laugfs supermarket", "laughs super"], "Grocery"),
+
     # ─── Shopping ───
-    ("Keells", ["keells", "keels", "keells super", "keells supermarket", "keells food city"], "Shopping"),
-    ("Cargills", ["cargills", "cargills food city", "food city"], "Shopping"),
-    ("Arpico", ["arpico", "arpico super"], "Shopping"),
-    ("Sathosa", ["sathosa", "lanka sathosa"], "Shopping"),
-    ("Glomark", ["glomark"], "Shopping"),
-    ("SPAR", ["spar"], "Shopping"),
-    ("Laugfs Super", ["laugfs super", "laugfs supermarket", "laughs super"], "Shopping"),
     ("Softlogic Max", ["softlogic max", "softlogic"], "Shopping"),
     ("Singer", ["singer", "singer sri lanka"], "Shopping"),
     ("Damro", ["damro"], "Shopping"),

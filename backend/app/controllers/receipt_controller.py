@@ -66,7 +66,7 @@ def upload_receipt():
             os.remove(file_path)
         return jsonify({'status': 'error', 'message': 'Image upload failed'}), 500
 
-    category = map_category(parsed["merchant_name"])
+    category = map_category(parsed["merchant_name"], parsed.get("items_context"))
 
     receipt_doc = create_receipt(
         user_id=user_id,
