@@ -1,18 +1,105 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Camera, Image as ImageIcon, X, Sparkles, Zap } from 'lucide-react-native';
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
+import { Camera, Image as ImageIcon, X, Sparkles, Zap, RotateCcw } from 'lucide-react-native';
 import { ReceiptPreview } from '../../components/ReceiptPreview';
+import { uploadService } from '../../services/uploadService';
 import { colors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
 
 export function UploadReceiptScreen({ navigation }) {
-  const [stage, setStage] = useState('camera');
+  const [stage, setStage] = useState('camera'); // 'camera' | 'scanning' | 'preview'
+  const [receiptData, setReceiptData] = useState(null);
+  const [facing, setFacing] = useState('back');
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef(null);
 
+  // ─── Gallery picker ───────────────────────────────────────────────────────
+  const handleGalleryPick = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission needed',
+        'Please allow access to your photo library to pick a receipt.'
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets?.length > 0) {
+      const asset = result.assets[0];
+      await sendToBackend(asset.uri, asset.fileName || 'receipt.jpg', asset.mimeType || 'image/jpeg');
+    }
+  };
+
+  // ─── Camera capture ───────────────────────────────────────────────────────
+  const handleCapture = async () => {
+    if (!permission?.granted) {
+      await requestPermission();
+      return;
+    }
+
+    if (!cameraRef.current) return;
+
+    try {
+      setStage('scanning');
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.9,
+        base64: false,
+        skipProcessing: false,
+      });
+      await sendToBackend(photo.uri, 'receipt.jpg', 'image/jpeg');
+    } catch (err) {
+      setStage('camera');
+      Alert.alert('Camera Error', 'Could not take photo. Please try again.');
+    }
+  };
+
+  // ─── Upload to backend ────────────────────────────────────────────────────
+  const sendToBackend = async (uri, fileName, fileType) => {
+    setStage('scanning');
+    try {
+      const response = await uploadService.uploadReceipt(uri, fileName, fileType);
+      setReceiptData(response.data);
+      setStage('preview');
+    } catch (err) {
+      setStage('camera');
+      Alert.alert(
+        'Upload Failed',
+        err.message || 'Could not process the receipt. Please try again.'
+      );
+    }
+  };
+
+  // ─── Toggle front/back camera ─────────────────────────────────────────────
+  const toggleFacing = () => {
+    setFacing((prev) => (prev === 'back' ? 'front' : 'back'));
+  };
+
+  // ─── Preview stage ────────────────────────────────────────────────────────
   if (stage === 'preview') {
     return (
       <ReceiptPreview
-        onClose={() => setStage('camera')}
+        data={receiptData}
+        onClose={() => {
+          setReceiptData(null);
+          setStage('camera');
+        }}
         onSave={() => {
+          setReceiptData(null);
           setStage('camera');
           navigation?.goBack();
         }}
@@ -20,9 +107,44 @@ export function UploadReceiptScreen({ navigation }) {
     );
   }
 
+  // ─── Scanning overlay ─────────────────────────────────────────────────────
+  if (stage === 'scanning') {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.gold} />
+        <Text style={styles.loadingTitle}>Processing Receipt…</Text>
+        <Text style={styles.loadingSubtitle}>OCR is reading your receipt. This may take a moment.</Text>
+      </View>
+    );
+  }
+
+  // ─── Camera permission not yet granted ───────────────────────────────────
+  if (!permission?.granted) {
+    return (
+      <View style={styles.permissionContainer}>
+        <Camera size={48} color={colors.gold} />
+        <Text style={styles.permissionTitle}>Camera Access Needed</Text>
+        <Text style={styles.permissionText}>
+          Grant camera access to capture receipts, or use the Gallery button to pick an existing photo.
+        </Text>
+        <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission}>
+          <Text style={styles.permissionBtnText}>Allow Camera</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.galleryFallbackBtn} onPress={handleGalleryPick}>
+          <ImageIcon size={16} color={colors.gold} />
+          <Text style={styles.galleryFallbackText}>Use Gallery Instead</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // ─── Live camera viewfinder ───────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      <View style={styles.viewfinder}>
+      <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing={facing} />
+
+      {/* Overlay frame */}
+      <View style={styles.overlay}>
         <View style={styles.receiptFrame}>
           {['tl', 'tr', 'bl', 'br'].map((c) => (
             <View
@@ -36,26 +158,12 @@ export function UploadReceiptScreen({ navigation }) {
               ]}
             />
           ))}
-
-          <View style={styles.fauxContent}>
-            <View style={styles.fauxLine1} />
-            <View style={styles.fauxLine2} />
-            <View style={styles.fauxItems}>
-              {[...Array(6)].map((_, i) => (
-                <View key={i} style={styles.fauxItem}>
-                  <View style={styles.fauxItemLeft} />
-                  <View style={styles.fauxItemRight} />
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {stage === 'scanning' && <View style={styles.scanLine} />}
         </View>
       </View>
 
+      {/* Top bar */}
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.topBtn}>
+        <TouchableOpacity style={styles.topBtn} onPress={() => navigation?.goBack()}>
           <X size={16} color={colors.white} />
         </TouchableOpacity>
         <Text style={styles.topTitle}>Receipt Scanner</Text>
@@ -65,38 +173,35 @@ export function UploadReceiptScreen({ navigation }) {
         </View>
       </View>
 
+      {/* Hint */}
       <View style={styles.hint}>
-        <Text style={styles.hintText}>
-          {stage === 'scanning' ? 'Reading line items...' : 'Align receipt inside the frame'}
-        </Text>
+        <Text style={styles.hintText}>Align receipt inside the frame</Text>
       </View>
 
+      {/* Bottom controls */}
       <View style={styles.bottomControls}>
-        <TouchableOpacity style={styles.controlBtn}>
+        {/* Gallery */}
+        <TouchableOpacity style={styles.controlBtn} onPress={handleGalleryPick}>
           <View style={styles.controlIcon}>
             <ImageIcon size={20} color={colors.white} />
           </View>
           <Text style={styles.controlLabel}>Gallery</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => {
-            setStage('scanning');
-            setTimeout(() => setStage('preview'), 1800);
-          }}
-          style={styles.captureBtn}
-        >
+        {/* Capture */}
+        <TouchableOpacity onPress={handleCapture} style={styles.captureBtn}>
           <View style={styles.captureRing} />
           <View style={styles.captureInner}>
             <Camera size={32} color={colors.black} strokeWidth={2.2} />
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.controlBtn}>
+        {/* Flip camera */}
+        <TouchableOpacity style={styles.controlBtn} onPress={toggleFacing}>
           <View style={styles.controlIcon}>
-            <Zap size={20} color={colors.white} />
+            <RotateCcw size={20} color={colors.white} />
           </View>
-          <Text style={styles.controlLabel}>Auto</Text>
+          <Text style={styles.controlLabel}>Flip</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -108,18 +213,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  viewfinder: {
-    flex: 1,
-    backgroundColor: '#000',
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     paddingHorizontal: 48,
   },
   receiptFrame: {
     height: '60%',
     borderRadius: 16,
-    borderWidth: 2,
-    borderColor: 'rgba(250,204,21,0.8)',
-    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(250,204,21,0.4)',
     position: 'relative',
   },
   corner: {
@@ -128,55 +231,6 @@ const styles = StyleSheet.create({
     height: 24,
     borderColor: colors.gold,
     zIndex: 2,
-  },
-  fauxContent: {
-    position: 'absolute',
-    inset: 24,
-    gap: 8,
-  },
-  fauxLine1: {
-    height: 12,
-    width: '75%',
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-  },
-  fauxLine2: {
-    height: 8,
-    width: '50%',
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  fauxItems: {
-    marginTop: 12,
-    gap: 6,
-  },
-  fauxItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  fauxItemLeft: {
-    height: 8,
-    width: '33%',
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-  },
-  fauxItemRight: {
-    height: 8,
-    width: 48,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-  },
-  scanLine: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 4,
-    backgroundColor: colors.gold,
-    opacity: 0.8,
-    shadowColor: colors.gold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
   },
   topBar: {
     position: 'absolute',
@@ -278,5 +332,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 4,
     borderColor: 'rgba(255,255,255,0.2)',
+  },
+  // ─── Loading / scanning state ───────────────────────────────────────────
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+    paddingHorizontal: 40,
+  },
+  loadingTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.white,
+    marginTop: 8,
+  },
+  loadingSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+  },
+  // ─── Permission state ───────────────────────────────────────────────────
+  permissionContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 40,
+  },
+  permissionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.white,
+    marginTop: 8,
+  },
+  permissionText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  permissionBtn: {
+    marginTop: 8,
+    backgroundColor: colors.gold,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: borderRadius.full,
+  },
+  permissionBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.black,
+  },
+  galleryFallbackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  galleryFallbackText: {
+    fontSize: 13,
+    color: colors.gold,
   },
 });
