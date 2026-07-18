@@ -185,7 +185,7 @@ MERCHANTS = [
 
 def run():
     connect_db()
-    collection = get_db().get_collection("merchants") if get_db() else None
+    collection = get_db().get_collection("merchants") if get_db() is not None else None
     if collection is None:
         print("[SEED] Cannot seed — database not connected.")
         sys.exit(1)
