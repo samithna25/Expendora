@@ -22,8 +22,9 @@ CURRENCY_MAP = {
 }
 
 TOTAL_PATTERNS = [
-    r'(?:grand\s+)?\btotal\b\s*[:;.]?\s*(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£)?\s*([\d,]+\.\d{2})',
-    r'\bamount\b\s*(?:due)?\s*[:;.]?\s*(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£)?\s*([\d,]+\.\d{2})',
+    r'\b(?:net|grand)\s+total\b\s*[:;.]?\s*(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£)?\s*([\d,]+\.\d{2})',
+    r'\b(?:net\s+)?amount\b\s*(?:due)?\s*[:;.]?\s*(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£)?\s*([\d,]+\.\d{2})',
+    r'(?<!\bsub)\s*\btotal\b\s*[:;.]?\s*(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£)?\s*([\d,]+\.\d{2})',
     r'\bbalance\b\s*(?:due)?\s*[:;.]?\s*(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£)?\s*([\d,]+\.\d{2})',
     r'(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£)\s*([\d,]+\.\d{2})',
 ]
@@ -131,13 +132,41 @@ def _extract_amount(text: str) -> tuple:
                 currency = _detect_currency(text[:match.end()])
                 return val, currency
 
-    fallback = re.findall(r'([\d,]+\.\d{2})', text)
+    fallback = _find_best_fallback(text)
     if fallback:
-        val = _to_float(fallback[-1])
-        if val is not None:
-            return val, _detect_currency(text)
+        return fallback
 
     return None, None
+
+
+_FALLBACK_SKIP_LINE = re.compile(
+    r'\b(?:subtotal|discount|tax|gst|sst|vat|change|cash|payment|tips?|service)\b',
+    re.IGNORECASE,
+)
+
+
+def _find_best_fallback(text: str) -> tuple | None:
+    lines = text.strip().split('\n')
+    candidates = []
+    skipped_candidates = []
+
+    for line in lines:
+        numbers = re.findall(r'([\d,]+\.\d{2})', line)
+        if not numbers:
+            continue
+        is_skip = bool(_FALLBACK_SKIP_LINE.search(line))
+        for num in numbers:
+            val = _to_float(num)
+            if val is not None:
+                entry = (val, _detect_currency(line))
+                if is_skip:
+                    skipped_candidates.append(entry)
+                else:
+                    candidates.append(entry)
+
+    if candidates:
+        return candidates[-1]
+    return None
 
 
 def _detect_currency(text: str) -> str | None:
