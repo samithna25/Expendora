@@ -1,5 +1,7 @@
+from datetime import datetime, timezone
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
+from bson import ObjectId
 from app.config.config import Config
 from app.models.merchant_model import create_merchant_doc
 
@@ -100,9 +102,79 @@ def seed_merchant(name: str, aliases: list, category: str):
     try:
         db["merchants"].update_one(
             {"name": doc["name"]},
-            {"$setOnInsert": doc},
+            {"$set": doc},
             upsert=True,
         )
         return True
     except Exception:
         return False
+
+
+# ─────────────────────────────────────────────
+# Expense database operations
+# ─────────────────────────────────────────────
+
+def save_expense(expense_doc):
+    if db is None:
+        raise Exception("Database not connected. Call connect_db() first.")
+    result = db["expenses"].insert_one(expense_doc)
+    return str(result.inserted_id)
+
+
+def get_expenses_by_user(user_id, filters=None, sort_field="date", sort_order=-1,
+                         page=1, limit=20):
+    if db is None:
+        raise Exception("Database not connected. Call connect_db() first.")
+
+    query = {"userId": ObjectId(user_id)}
+
+    if filters:
+        if filters.get("category"):
+            query["category"] = filters["category"]
+        if filters.get("month"):
+            query["date"] = {"$regex": f"^{filters['month']}"}
+        if filters.get("start_date") or filters.get("end_date"):
+            date_filter = {}
+            if filters.get("start_date"):
+                date_filter["$gte"] = filters["start_date"]
+            if filters.get("end_date"):
+                date_filter["$lte"] = filters["end_date"]
+            if date_filter:
+                query["date"] = date_filter
+        if filters.get("payment_method"):
+            query["paymentMethod"] = filters["payment_method"]
+
+    total = db["expenses"].count_documents(query)
+    expenses = (
+        db["expenses"]
+        .find(query)
+        .sort(sort_field, sort_order)
+        .skip((page - 1) * limit)
+        .limit(limit)
+    )
+
+    return list(expenses), total
+
+
+def get_expense_by_id(expense_id):
+    if db is None:
+        raise Exception("Database not connected. Call connect_db() first.")
+    return db["expenses"].find_one({"_id": ObjectId(expense_id)})
+
+
+def update_expense(expense_id, update_data):
+    if db is None:
+        raise Exception("Database not connected. Call connect_db() first.")
+    update_data["updatedAt"] = datetime.now(timezone.utc)
+    result = db["expenses"].update_one(
+        {"_id": ObjectId(expense_id)},
+        {"$set": update_data}
+    )
+    return result.modified_count
+
+
+def delete_expense(expense_id):
+    if db is None:
+        raise Exception("Database not connected. Call connect_db() first.")
+    result = db["expenses"].delete_one({"_id": ObjectId(expense_id)})
+    return result.deleted_count
