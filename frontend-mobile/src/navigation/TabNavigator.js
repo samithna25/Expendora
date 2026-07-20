@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Home, ListTree, ScanLine, PieChart, User } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { colors as themeColors } from '../theme/colors';
 import { DashboardScreen } from '../screens/Dashboard';
@@ -26,6 +27,10 @@ function ScanTabButton() {
 export function TabNavigator() {
   const { isDark } = useTheme();
   const colorScheme = isDark ? 'dark' : 'light';
+  const insets = useSafeAreaInsets();
+
+  const bottomInset = Math.max(insets.bottom, 12);
+  const barHeight = 64 + bottomInset;
 
   return (
     <Tab.Navigator
@@ -35,8 +40,8 @@ export function TabNavigator() {
           backgroundColor: themeColors.card[colorScheme],
           borderTopColor: themeColors.border[colorScheme],
           borderTopWidth: 1,
-          height: 80,
-          paddingBottom: 16,
+          height: barHeight,
+          paddingBottom: bottomInset,
           paddingTop: 8,
         },
         tabBarActiveTintColor: themeColors.gold,

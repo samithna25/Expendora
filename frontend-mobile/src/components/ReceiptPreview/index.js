@@ -4,6 +4,7 @@ import { X, Sparkles, Check, AlertCircle } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { colors as themeColors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * ReceiptPreview
@@ -19,6 +20,7 @@ import { borderRadius } from '../../theme/spacing';
 export function ReceiptPreview({ data, onClose, onSave }) {
   const { isDark } = useTheme();
   const colorScheme = isDark ? 'dark' : 'light';
+  const insets = useSafeAreaInsets();
 
   const merchantName = data?.merchant_name || 'Unknown Merchant';
   const amount       = data?.amount != null ? Number(data.amount).toFixed(2) : null;
@@ -30,9 +32,13 @@ export function ReceiptPreview({ data, onClose, onSave }) {
   const hasOcrData = data?.merchant_name || data?.amount || data?.date;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: themeColors.background[colorScheme] }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themeColors.background[colorScheme] }]}
+      contentContainerStyle={{ paddingBottom: 40 + Math.max(insets.bottom, 16) }}
+      showsVerticalScrollIndicator={false}
+    >
       {/* ── Header ── */}
-      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold }]}>
+      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold, paddingTop: Math.max(insets.top, 24) + 12 }]}>
         <View style={styles.headerRow}>
           <TouchableOpacity onPress={onClose} style={[styles.iconBtn, { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
             <X size={16} color={themeColors.white} />

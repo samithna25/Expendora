@@ -193,7 +193,7 @@ export function ReportsScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: themeColors.background[colorScheme] }]}
-      contentContainerStyle={{ paddingBottom: 40 }}
+      contentContainerStyle={{ paddingBottom: 110 + Math.max(insets.bottom, 12) }}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
@@ -205,7 +205,7 @@ export function ReportsScreen() {
       }
     >
       {/* ── Header — respects status bar ── */}
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 24) + 12 }]}>
         <View style={styles.headerRow}>
           <View>
             <Text style={[styles.title, { color: themeColors.foreground[colorScheme] }]}>

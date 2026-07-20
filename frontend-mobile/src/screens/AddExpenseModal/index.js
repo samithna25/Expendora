@@ -27,6 +27,7 @@ import { EXPENSE_CATEGORIES } from '../../utils/constants';
 import { expenseService } from '../../services/expenseService';
 import { useExpenses } from '../../context/ExpenseContext';
 import { formatDate } from '../../utils/formatters';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * AddExpenseModal
@@ -42,6 +43,7 @@ export function AddExpenseModal({ navigation, route }) {
   const { isDark } = useTheme();
   const colorScheme = isDark ? 'dark' : 'light';
   const { addExpense, updateExpense } = useExpenses();
+  const insets = useSafeAreaInsets();
 
   const existing = route?.params?.expense ?? null;
   const isEdit = !!existing;
@@ -104,7 +106,7 @@ export function AddExpenseModal({ navigation, route }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold }]}>
+      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold, paddingTop: Math.max(insets.top, 24) + 12 }]}>
         <TouchableOpacity
           onPress={() => navigation?.goBack()}
           style={[styles.headerBtn, { backgroundColor: 'rgba(255,255,255,0.15)' }]}
@@ -133,7 +135,10 @@ export function AddExpenseModal({ navigation, route }) {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.form, { paddingBottom: 40 + Math.max(insets.bottom, 16) }]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Amount — displayed prominently at top */}
         <View style={[styles.amountCard, { backgroundColor: themeColors.card[colorScheme], borderColor: themeColors.border[colorScheme] }]}>
           <Text style={[styles.amountLabel, { color: themeColors.muted[colorScheme] }]}>AMOUNT</Text>

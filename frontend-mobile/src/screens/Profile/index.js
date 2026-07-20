@@ -14,8 +14,12 @@ export function ProfileScreen() {
   const colorScheme = isDark ? 'dark' : 'light';
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: themeColors.background[isDark ? 'dark' : 'light'] }]} showsVerticalScrollIndicator={false}>
-      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold, paddingTop: insets.top + 8 }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themeColors.background[isDark ? 'dark' : 'light'] }]}
+      contentContainerStyle={{ paddingBottom: 110 + Math.max(insets.bottom, 12) }}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold, paddingTop: Math.max(insets.top, 24) + 12 }]}>
         <View style={styles.headerOrb} />
 
         <View style={styles.profileSection}>

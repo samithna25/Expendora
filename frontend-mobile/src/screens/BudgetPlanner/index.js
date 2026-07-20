@@ -76,10 +76,11 @@ export function BudgetPlannerScreen({ navigation }) {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: themeColors.background[colorScheme] }]}
+      contentContainerStyle={{ paddingBottom: 110 + Math.max(insets.bottom, 12) }}
       showsVerticalScrollIndicator={false}
     >
       {/* ── Header ── */}
-      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold, paddingTop: insets.top + 8 }]}>
+      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold, paddingTop: Math.max(insets.top, 24) + 12 }]}>
         <View style={styles.headerOrb} />
         <View style={styles.headerRow}>
           <View>

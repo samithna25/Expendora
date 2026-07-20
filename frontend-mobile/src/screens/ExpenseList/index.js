@@ -117,6 +117,7 @@ export function ExpenseListScreen({ navigation }) {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: themeColors.background[colorScheme] }]}
+      contentContainerStyle={{ paddingBottom: 110 + Math.max(insets.bottom, 12) }}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
@@ -128,7 +129,7 @@ export function ExpenseListScreen({ navigation }) {
       }
     >
       {/* ── Header ── */}
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 24) + 12 }]}>
         <View style={styles.headerRow}>
           <View>
             <Text style={[styles.title, { color: themeColors.foreground[colorScheme] }]}>

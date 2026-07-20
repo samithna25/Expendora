@@ -16,6 +16,7 @@ import { expenseService } from '../../services/expenseService';
 import { useExpenses } from '../../context/ExpenseContext';
 import { colors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * UploadReceiptScreen
@@ -36,6 +37,7 @@ export function UploadReceiptScreen({ navigation }) {
   const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef(null);
+  const insets = useSafeAreaInsets();
 
   const { addExpense } = useExpenses();
 
@@ -220,7 +222,7 @@ export function UploadReceiptScreen({ navigation }) {
       </View>
 
       {/* Top bar */}
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 24) + 8 }]}>
         <TouchableOpacity style={styles.topBtn} onPress={() => navigation?.goBack()}>
           <X size={16} color={colors.white} />
         </TouchableOpacity>
@@ -237,7 +239,7 @@ export function UploadReceiptScreen({ navigation }) {
       </View>
 
       {/* Bottom controls */}
-      <View style={styles.bottomControls}>
+      <View style={[styles.bottomControls, { bottom: 40 + Math.max(insets.bottom, 16) }]}>
         {/* Gallery */}
         <TouchableOpacity style={styles.controlBtn} onPress={handleGalleryPick}>
           <View style={styles.controlIcon}>
