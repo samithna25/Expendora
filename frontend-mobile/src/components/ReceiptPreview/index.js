@@ -22,9 +22,9 @@ export function ReceiptPreview({ data, onClose, onSave }) {
 
   const merchantName = data?.merchant_name || 'Unknown Merchant';
   const amount       = data?.amount != null ? Number(data.amount).toFixed(2) : null;
-  const currency     = data?.currency || 'MYR';
+  const currency     = data?.currency || 'LKR';  // Default to Sri Lankan Rupee
   const date         = data?.date || null;
-  const category     = data?.category || 'Uncategorized';
+  const category     = data?.category || 'Other';
   const imageUrl     = data?.image_url || null;
 
   const hasOcrData = data?.merchant_name || data?.amount || data?.date;

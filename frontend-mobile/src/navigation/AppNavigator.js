@@ -10,6 +10,7 @@ import { TabNavigator } from './TabNavigator';
 import { UploadReceiptScreen } from '../screens/UploadReceipt';
 import { SettingsScreen } from '../screens/Settings';
 import { BudgetPlannerScreen } from '../screens/BudgetPlanner';
+import { AddExpenseModal } from '../screens/AddExpenseModal';
 import { ONBOARDING_STORAGE_KEY } from '../utils/constants';
 
 const Stack = createNativeStackNavigator();
@@ -67,6 +68,11 @@ export function AppNavigator() {
             <Stack.Screen
               name="UploadReceipt"
               component={UploadReceiptScreen}
+              options={{ animation: 'slide_from_bottom' }}
+            />
+            <Stack.Screen
+              name="AddExpenseModal"
+              component={AddExpenseModal}
               options={{ animation: 'slide_from_bottom' }}
             />
             <Stack.Screen name="Settings" component={SettingsScreen} />

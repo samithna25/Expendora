@@ -1,7 +1,11 @@
 import { CURRENCY_SYMBOL } from './constants';
 
 export function formatCurrency(amount) {
-  return `${CURRENCY_SYMBOL}${Math.abs(amount).toFixed(2)}`;
+  const sym = CURRENCY_SYMBOL.trim();
+  // Rs-style prefix: "Rs 1,234.50" — add space after symbol
+  // $-style prefix: "$1,234.50" — no space
+  const space = sym.length > 1 ? ' ' : '';
+  return `${sym}${space}${Math.abs(amount).toFixed(2)}`;
 }
 
 export function formatDate(dateString) {

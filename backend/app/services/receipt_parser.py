@@ -14,11 +14,19 @@ MERCHANT_SKIP_PATTERNS = [
     r'^server', r'^staff', r'^address', r'^lot',
     r'^unit', r'^floor', r'^opening', r'^operated',
     r'^company', r'^reg',
+    # Receipt copy/reprint headers — appear on Keells, Cargills, etc.
+    r'^reprint', r'^re-print', r'^copy', r'^duplicate',
+    r'^original', r'^customer\s+copy', r'^merchant\s+copy',
 ]
 
 CURRENCY_MAP = {
+    # Sri Lanka (default)
+    'lkr': 'LKR', 'rs': 'LKR', 'rs.': 'LKR', 'lk': 'LKR',
+    # Malaysia
     'rm': 'MYR', 'myr': 'MYR',
+    # Other common
     'usd': 'USD', 'eur': 'EUR', 'gbp': 'GBP', 'sgd': 'SGD',
+    'inr': 'INR', 'aud': 'AUD',
 }
 
 TOTAL_PATTERNS = [
@@ -73,7 +81,7 @@ def parse_receipt_text(raw_text: str) -> dict:
     return {
         "merchant_name": merchant,
         "amount": amount,
-        "currency": currency or "MYR",
+        "currency": currency or "LKR",   # Default to LKR (Sri Lanka)
         "date": date,
         "items_context": items_context,
     }
