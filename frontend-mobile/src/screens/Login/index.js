@@ -7,6 +7,7 @@ import { CustomButton } from '../../components/CustomButton';
 import { colors } from '../../theme/colors';
 import { isValidEmail } from '../../utils/validators';
 import { useAuth } from '../../context/AuthContext';
+import { BrandLogo } from '../../components/BrandLogo';
 
 export function LoginScreen() {
   const { login } = useAuth();
@@ -39,7 +40,7 @@ export function LoginScreen() {
       <View style={styles.bgOrb2} />
 
       <View style={styles.content}>
-        <Text style={styles.logo}>EXPENDORA</Text>
+        <BrandLogo size={32} variant="white" animated={false} showSubtitle={false} style={{ marginBottom: 12 }} />
 
         <View style={styles.headerText}>
           <Text style={styles.title}>Welcome back</Text>

@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated, StyleSheet } from 'react-native';
 import { Coins, TrendingUp, Wallet } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
+import { BrandLogo } from '../../components/BrandLogo';
 
 export function SplashScreen({ onFinish }) {
   const dotAnimations = useRef([...Array(3)].map(() => new Animated.Value(0.4)));
@@ -48,9 +49,8 @@ export function SplashScreen({ onFinish }) {
 
       <View style={styles.center}>
         <View style={styles.logoWrap}>
-          <View style={styles.pulseRing} />
-          <Text style={styles.logoText}>EXPENDORA</Text>
-          <Text style={styles.logoSub}>Track · Save · Grow</Text>
+          <View style={styles.pulseGlow} />
+          <BrandLogo size={42} variant="white" animated={true} showSubtitle={true} />
         </View>
 
         <View style={styles.loader}>
@@ -137,31 +137,19 @@ const styles = StyleSheet.create({
   },
   logoWrap: {
     alignItems: 'center',
+    justifyContent: 'center',
     position: 'relative',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
   },
-  pulseRing: {
+  pulseGlow: {
     position: 'absolute',
-    top: -20,
-    left: -20,
-    right: -20,
-    bottom: -20,
-    borderRadius: 24,
-    backgroundColor: 'rgba(250,204,21,0.4)',
-    opacity: 0.5,
-  },
-  logoText: {
-    fontSize: 36,
-    fontWeight: '800',
-    color: colors.gold,
-    letterSpacing: 6,
-  },
-  logoSub: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.6)',
-    letterSpacing: 4,
-    fontWeight: '600',
-    marginTop: 4,
-    textTransform: 'uppercase',
+    top: -10,
+    left: -10,
+    right: -10,
+    bottom: -10,
+    borderRadius: 30,
+    backgroundColor: 'rgba(250,204,21,0.08)',
   },
   loader: {
     alignItems: 'center',
