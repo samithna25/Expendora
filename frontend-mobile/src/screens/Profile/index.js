@@ -5,14 +5,17 @@ import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { colors as themeColors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function ProfileScreen() {
   const { isDark, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
+  const insets = useSafeAreaInsets();
+  const colorScheme = isDark ? 'dark' : 'light';
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: themeColors.background[isDark ? 'dark' : 'light'] }]} showsVerticalScrollIndicator={false}>
-      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold }]}>
+      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold, paddingTop: insets.top + 8 }]}>
         <View style={styles.headerOrb} />
 
         <View style={styles.profileSection}>

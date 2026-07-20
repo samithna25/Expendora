@@ -19,6 +19,7 @@ import { formatCurrency, formatDate } from '../../utils/formatters';
 import { EXPENSE_CATEGORIES } from '../../utils/constants';
 import { expenseService } from '../../services/expenseService';
 import { useExpenses } from '../../context/ExpenseContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * ExpenseListScreen
@@ -41,6 +42,7 @@ export function ExpenseListScreen({ navigation }) {
   const [selectedCat, setSelectedCat] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const insets = useSafeAreaInsets();
 
   // ─── Normalise expense → ExpenseCard shape ─────────────────────────────
   const normalise = (e) => ({
@@ -126,7 +128,7 @@ export function ExpenseListScreen({ navigation }) {
       }
     >
       {/* ── Header ── */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <View style={styles.headerRow}>
           <View>
             <Text style={[styles.title, { color: themeColors.foreground[colorScheme] }]}>

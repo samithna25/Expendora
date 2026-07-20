@@ -10,15 +10,17 @@ import { formatCurrency, formatDate } from '../../utils/formatters';
 import { useExpenses } from '../../context/ExpenseContext';
 import { useAuth } from '../../context/AuthContext';
 import { CURRENCY_SYMBOL } from '../../utils/constants';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ─── Default budget limit for "remaining" display ─────────────────────────
-const MONTHLY_BUDGET = 1500;
+const MONTHLY_BUDGET = 15000;
 
 export function DashboardScreen({ navigation }) {
   const { isDark } = useTheme();
   const colorScheme = isDark ? 'dark' : 'light';
   const { user } = useAuth();
   const { expenses, loading, error, totalSpent, categoryBreakdown, refresh } = useExpenses();
+  const insets = useSafeAreaInsets();
 
   // 4 most recent expenses for the "Recent Transactions" strip
   const recentExpenses = expenses.slice(0, 4);
@@ -41,7 +43,7 @@ export function DashboardScreen({ navigation }) {
       showsVerticalScrollIndicator={false}
     >
       {/* ── Header ── */}
-      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold }]}>
+      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold, paddingTop: insets.top + 8 }]}>
         <View style={styles.bgOrb1} />
         <View style={styles.bgOrb2} />
 

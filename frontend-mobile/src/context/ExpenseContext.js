@@ -19,6 +19,17 @@ import { EXPENSE_CATEGORIES } from '../utils/constants';
 
 const ExpenseContext = createContext(null);
 
+// ─── Normalise a raw expense from the API or an optimistic update ────────────
+// Ensures category is always lowercase (matching EXPENSE_CATEGORIES ids)
+// and id is always a string so comparisons work correctly.
+function normaliseExpense(e) {
+  return {
+    ...e,
+    id: e.id ?? (e._id ? String(e._id) : String(Date.now())),
+    category: e.category ? e.category.toLowerCase() : 'other',
+  };
+}
+
 export function ExpenseProvider({ children }) {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,12 +62,8 @@ export function ExpenseProvider({ children }) {
         // Primary shape from expense_controller.py → list_expenses()
         list = response.data.expenses;
       }
-      // Normalise category casing: backend stores 'Food', frontend uses 'food'
-      list = list.map((e) => ({
-        ...e,
-        id: e.id ?? (e._id ? String(e._id) : undefined),
-        category: e.category ? e.category.toLowerCase() : 'other',
-      }));
+      // Normalise: category to lowercase, id to string
+      list = list.map(normaliseExpense);
       setExpenses(list);
     } catch (err) {
       setError(err.message || 'Failed to load expenses.');
@@ -71,7 +78,8 @@ export function ExpenseProvider({ children }) {
 
   // ─── Mutators (optimistic) ────────────────────────────────────────────────
   const addExpense = useCallback((expense) => {
-    setExpenses((prev) => [expense, ...prev]);
+    // Normalise before adding so it immediately matches the chart's category filter
+    setExpenses((prev) => [normaliseExpense(expense), ...prev]);
   }, []);
 
   const removeExpense = useCallback((id) => {
@@ -79,8 +87,9 @@ export function ExpenseProvider({ children }) {
   }, []);
 
   const updateExpense = useCallback((updated) => {
+    const norm = normaliseExpense(updated);
     setExpenses((prev) =>
-      prev.map((e) => ((e.id ?? e._id) === (updated.id ?? updated._id) ? updated : e)),
+      prev.map((e) => (e.id === norm.id ? norm : e)),
     );
   }, []);
 

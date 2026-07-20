@@ -8,6 +8,7 @@ import { borderRadius } from '../../theme/spacing';
 import { formatCurrency } from '../../utils/formatters';
 import { useExpenses } from '../../context/ExpenseContext';
 import { EXPENSE_CATEGORIES } from '../../utils/constants';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * Default monthly budget limits per category (in $).
@@ -35,6 +36,7 @@ const DEFAULT_LIMITS = {
 export function BudgetPlannerScreen({ navigation }) {
   const { isDark } = useTheme();
   const colorScheme = isDark ? 'dark' : 'light';
+  const insets = useSafeAreaInsets();
   const { expenses, loading, error, refresh } = useExpenses();
 
   // ─── Derive live spending per category ───────────────────────────────────
@@ -77,7 +79,7 @@ export function BudgetPlannerScreen({ navigation }) {
       showsVerticalScrollIndicator={false}
     >
       {/* ── Header ── */}
-      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold }]}>
+      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold, paddingTop: insets.top + 8 }]}>
         <View style={styles.headerOrb} />
         <View style={styles.headerRow}>
           <View>
