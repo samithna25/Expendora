@@ -18,8 +18,9 @@ KEYWORD_MAP = {
     ],
     "Grocery": [
         "supermarket", "grocery", "groceries", "super", "mart",
-        "food city", "food mart", "food store",          # food city = Cargills chain
-        "keells", "cargills", "sathosa",
+        "food city", "food mart", "food store",
+        "keells", "keels",     # Keells Super (both spellings appear on receipts)
+        "cargills", "sathosa",
     ],
     "Shopping": [
         "mall", "retail", "department store",
@@ -62,14 +63,47 @@ def _keyword_category(merchant_name: str) -> str | None:
     return None
 
 
+# Maps the extended category labels used internally (and by AI) to the
+# exact values accepted by expense_controller.py's VALID_CATEGORIES set.
+# expense_controller accepts: Food, Transport, Shopping, Bills, Entertainment, Other
+CATEGORY_NORMALISE = {
+    "food & dining": "Food",
+    "grocery": "Food",       # Keells, Cargills, supermarkets → Food
+    "groceries": "Food",
+    "transport": "Transport",
+    "shopping": "Shopping",
+    "online shopping": "Shopping",
+    "bills & utilities": "Bills",
+    "bills": "Bills",
+    "utilities": "Bills",
+    "entertainment": "Entertainment",
+    "healthcare": "Other",
+    "health": "Other",
+    "education": "Other",
+    "banking": "Other",
+    "travel": "Transport",
+    "personal care": "Other",
+    "income": "Other",
+    "uncategorized": "Other",
+    # Direct matches (already correct)
+    "food": "Food",
+    "other": "Other",
+}
+
+
+def _normalise_category(raw: str) -> str:
+    """Convert any category label to one accepted by expense_controller."""
+    return CATEGORY_NORMALISE.get(raw.lower().strip(), "Other")
+
+
 def map_category(merchant_name: str | None, items_context: str | None = None) -> str:
     if not merchant_name:
-        return "Uncategorized"
+        return "Other"
 
     # 1. Keyword check FIRST — authoritative, prevents stale DB entries from overriding
     keyword_cat = _keyword_category(merchant_name)
     if keyword_cat:
-        return keyword_cat
+        return _normalise_category(keyword_cat)
 
     # 2. DB lookup (only for merchants with no keyword match)
     merchant = find_merchant(merchant_name)
@@ -77,14 +111,14 @@ def map_category(merchant_name: str | None, items_context: str | None = None) ->
         logger.info(
             "[map_category] '%s' -> '%s' (DB hit)", merchant_name, merchant["category"]
         )
-        return merchant["category"]
+        return _normalise_category(merchant["category"])
 
     # 3. AI categorization — pass items as extra context for ambiguous merchant names
     category = categorize_with_ai(merchant_name, items_context)
     if category:
         save_merchant(merchant_name, [], category)
         logger.info("[map_category] '%s' -> '%s' (AI + saved)", merchant_name, category)
-        return category
+        return _normalise_category(category)
 
-    logger.info("[map_category] '%s' -> 'Uncategorized'", merchant_name)
-    return "Uncategorized"
+    logger.info("[map_category] '%s' -> 'Other' (fallback)", merchant_name)
+    return "Other"

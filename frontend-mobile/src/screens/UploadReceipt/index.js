@@ -12,15 +12,34 @@ import * as ImagePicker from 'expo-image-picker';
 import { Camera, Image as ImageIcon, X, Sparkles, Zap, RotateCcw } from 'lucide-react-native';
 import { ReceiptPreview } from '../../components/ReceiptPreview';
 import { uploadService } from '../../services/uploadService';
+import { expenseService } from '../../services/expenseService';
+import { useExpenses } from '../../context/ExpenseContext';
 import { colors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+/**
+ * UploadReceiptScreen
+ *
+ * 3-stage flow:
+ *  1. 'camera'   — live viewfinder / gallery picker
+ *  2. 'scanning' — spinner while OCR + Cloudinary run on the backend
+ *  3. 'preview'  — ReceiptPreview shows extracted data; user can Save or Retake
+ *
+ * On Save:
+ *  - Calls expenseService.create() to persist the expense in the DB
+ *  - Calls addExpense() on ExpenseContext so Dashboard/ExpenseList update instantly
+ *  - Navigates back
+ */
 export function UploadReceiptScreen({ navigation }) {
-  const [stage, setStage] = useState('camera'); // 'camera' | 'scanning' | 'preview'
+  const [stage, setStage] = useState('camera'); // 'camera' | 'scanning' | 'preview' | 'saving'
   const [receiptData, setReceiptData] = useState(null);
   const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef(null);
+  const insets = useSafeAreaInsets();
+
+  const { addExpense } = useExpenses();
 
   // ─── Gallery picker ───────────────────────────────────────────────────────
   const handleGalleryPick = async () => {
@@ -28,7 +47,7 @@ export function UploadReceiptScreen({ navigation }) {
     if (status !== 'granted') {
       Alert.alert(
         'Permission needed',
-        'Please allow access to your photo library to pick a receipt.'
+        'Please allow access to your photo library to pick a receipt.',
       );
       return;
     }
@@ -68,7 +87,7 @@ export function UploadReceiptScreen({ navigation }) {
     }
   };
 
-  // ─── Upload to backend ────────────────────────────────────────────────────
+  // ─── Upload to backend (OCR) ───────────────────────────────────────────────
   const sendToBackend = async (uri, fileName, fileType) => {
     setStage('scanning');
     try {
@@ -79,7 +98,48 @@ export function UploadReceiptScreen({ navigation }) {
       setStage('camera');
       Alert.alert(
         'Upload Failed',
-        err.message || 'Could not process the receipt. Please try again.'
+        err.message || 'Could not process the receipt. Please try again.',
+      );
+    }
+  };
+
+  // ─── Save expense to DB after OCR ─────────────────────────────────────────
+  const handleSaveExpense = async () => {
+    if (!receiptData) {
+      // No OCR data — just go back
+      navigation?.goBack();
+      return;
+    }
+
+    setStage('saving');
+
+    const rawCategory = receiptData.category?.toLowerCase() || 'other';
+    const payload = {
+      merchant: receiptData.merchant_name || 'Unknown Merchant',
+      amount: Number(receiptData.amount) || 0,
+      // Backend expects Title Case: Food, Transport, Shopping, Bills, Entertainment, Other
+      category: rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1),
+      date: receiptData.date || new Date().toISOString().split('T')[0],
+      method: 'Receipt',
+      notes: receiptData.image_url ? `Receipt: ${receiptData.image_url}` : '',
+    };
+
+    try {
+      const response = await expenseService.create(payload);
+      // Optimistically add to context so all screens update without re-fetching
+      const created = response?.data ?? { id: Date.now().toString(), ...payload };
+      addExpense(created);
+
+      Alert.alert(
+        'Expense Saved ✓',
+        `"${payload.merchant}" for $${payload.amount.toFixed(2)} has been added.`,
+        [{ text: 'OK', onPress: () => navigation?.goBack() }],
+      );
+    } catch (err) {
+      setStage('preview');
+      Alert.alert(
+        'Save Failed',
+        err.message || 'Could not save the expense. Please try again.',
       );
     }
   };
@@ -90,19 +150,16 @@ export function UploadReceiptScreen({ navigation }) {
   };
 
   // ─── Preview stage ────────────────────────────────────────────────────────
-  if (stage === 'preview') {
+  if (stage === 'preview' || stage === 'saving') {
     return (
       <ReceiptPreview
         data={receiptData}
+        saving={stage === 'saving'}
         onClose={() => {
           setReceiptData(null);
           setStage('camera');
         }}
-        onSave={() => {
-          setReceiptData(null);
-          setStage('camera');
-          navigation?.goBack();
-        }}
+        onSave={handleSaveExpense}
       />
     );
   }
@@ -113,19 +170,22 @@ export function UploadReceiptScreen({ navigation }) {
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.gold} />
         <Text style={styles.loadingTitle}>Processing Receipt…</Text>
-        <Text style={styles.loadingSubtitle}>OCR is reading your receipt. This may take a moment.</Text>
+        <Text style={styles.loadingSubtitle}>
+          OCR is reading your receipt. This may take a moment.
+        </Text>
       </View>
     );
   }
 
-  // ─── Camera permission not yet granted ───────────────────────────────────
+  // ─── Camera permission not yet granted ────────────────────────────────────
   if (!permission?.granted) {
     return (
       <View style={styles.permissionContainer}>
         <Camera size={48} color={colors.gold} />
         <Text style={styles.permissionTitle}>Camera Access Needed</Text>
         <Text style={styles.permissionText}>
-          Grant camera access to capture receipts, or use the Gallery button to pick an existing photo.
+          Grant camera access to capture receipts, or use the Gallery button to pick an existing
+          photo.
         </Text>
         <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission}>
           <Text style={styles.permissionBtnText}>Allow Camera</Text>
@@ -162,7 +222,7 @@ export function UploadReceiptScreen({ navigation }) {
       </View>
 
       {/* Top bar */}
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 24) + 8 }]}>
         <TouchableOpacity style={styles.topBtn} onPress={() => navigation?.goBack()}>
           <X size={16} color={colors.white} />
         </TouchableOpacity>
@@ -179,7 +239,7 @@ export function UploadReceiptScreen({ navigation }) {
       </View>
 
       {/* Bottom controls */}
-      <View style={styles.bottomControls}>
+      <View style={[styles.bottomControls, { bottom: 40 + Math.max(insets.bottom, 16) }]}>
         {/* Gallery */}
         <TouchableOpacity style={styles.controlBtn} onPress={handleGalleryPick}>
           <View style={styles.controlIcon}>
@@ -294,10 +354,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     zIndex: 10,
   },
-  controlBtn: {
-    alignItems: 'center',
-    gap: 6,
-  },
+  controlBtn: { alignItems: 'center', gap: 6 },
   controlIcon: {
     width: 48,
     height: 48,
@@ -306,10 +363,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  controlLabel: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
-  },
+  controlLabel: { fontSize: 10, color: 'rgba(255,255,255,0.7)' },
   captureBtn: {
     position: 'relative',
     alignItems: 'center',
@@ -333,7 +387,8 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  // ─── Loading / scanning state ───────────────────────────────────────────
+
+  // ─── Loading / scanning state ──────────────────────────────────────────
   loadingContainer: {
     flex: 1,
     backgroundColor: '#000',
@@ -353,7 +408,8 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
   },
-  // ─── Permission state ───────────────────────────────────────────────────
+
+  // ─── Permission state ──────────────────────────────────────────────────
   permissionContainer: {
     flex: 1,
     backgroundColor: '#000',

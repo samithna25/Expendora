@@ -3,6 +3,7 @@ import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { AuthProvider } from './src/context/AuthContext';
+import { ExpenseProvider } from './src/context/ExpenseContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 
 function AppContent() {
@@ -15,7 +16,9 @@ function AppContent() {
         backgroundColor={isDark ? '#0A0A0F' : '#FFFFFF'}
       />
       <AuthProvider>
-        <AppNavigator />
+        <ExpenseProvider>
+          <AppNavigator />
+        </ExpenseProvider>
       </AuthProvider>
     </>
   );
