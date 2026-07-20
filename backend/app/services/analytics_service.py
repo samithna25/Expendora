@@ -15,7 +15,7 @@ DEFAULT_BUDGET_LIMITS = {
 }
 
 
-def get_dashboard_analytics(user_id: str, month: str = None) -> dict:
+def get_dashboard_analytics(user_id: str, month: str = None, total_monthly_limit: float = None) -> dict:
     """
     Calculate comprehensive dashboard metrics using MongoDB aggregation.
     - Monthly total spending & transaction count
@@ -103,10 +103,18 @@ def get_dashboard_analytics(user_id: str, month: str = None) -> dict:
     ]
 
     # 5. Overspending alerts & budget thresholds
-    alerts, budget_status = calculate_budget_alerts(monthly_total, category_breakdown)
+    # Allow query-param override; fall back to user's stored budget; fall back to default
+    effective_monthly_limit = total_monthly_limit
+    if effective_monthly_limit is None:
+        user_doc = db["users"].find_one({"_id": user_obj_id}, {"monthly_budget": 1})
+        if user_doc and user_doc.get("monthly_budget"):
+            effective_monthly_limit = float(user_doc["monthly_budget"])
+
+    custom_limits = {"total": effective_monthly_limit} if effective_monthly_limit is not None else None
+    alerts, budget_status = calculate_budget_alerts(monthly_total, category_breakdown, custom_limits=custom_limits)
 
     # 6. Natural language spending insights
-    insights = generate_insights(monthly_total, top_category, alerts)
+    insights = generate_insights(monthly_total, top_category, alerts, monthly_limit=budget_status.get("monthly_limit"))
 
     return {
         "month": month,
@@ -231,16 +239,18 @@ def calculate_budget_alerts(monthly_total: float, category_breakdown: list, cust
     return alerts, budget_status
 
 
-def generate_insights(monthly_total: float, top_category: dict, alerts: list) -> str:
+def generate_insights(monthly_total: float, top_category: dict, alerts: list, monthly_limit: float = None) -> str:
     """Generates dynamic analytical text insights for the user."""
     if monthly_total == 0:
         return "No expenses recorded for this period yet. Start adding transactions to view analytics."
 
+    if top_category:
+        limit = monthly_limit or monthly_total
+        pct = round((top_category["total"] / limit) * 100, 1) if limit > 0 else 0.0
+        return f"{top_category['category']} is your highest spending category ({pct}% of total monthly budget)."
+
     exceeded_alerts = [a for a in alerts if a["level"] == "EXCEEDED"]
     if exceeded_alerts:
-        return f"Budget Alert: You have exceeded budget limits in {len(exceeded_alerts)} category/overall areas."
-
-    if top_category:
-        return f"{top_category['category']} is your highest spending category ({top_category['percentage']}% of total monthly budget)."
+        return f"Budget Alert: You have exceeded budget limits in {len(exceeded_alerts)} areas."
 
     return f"Total spending for this period is {monthly_total:.2f} across all categories."

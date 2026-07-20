@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Plus, Target, AlertTriangle, RefreshCw } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { colors as themeColors } from '../../theme/colors';
 import { BudgetCard } from '../../components/BudgetCard';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { borderRadius } from '../../theme/spacing';
 import { formatCurrency } from '../../utils/formatters';
 import { useExpenses } from '../../context/ExpenseContext';
@@ -98,7 +99,7 @@ export function BudgetPlannerScreen({ navigation }) {
         </View>
 
         {loading ? (
-          <ActivityIndicator color={themeColors.gold} style={{ marginTop: 24 }} />
+          <LoadingSpinner inline />
         ) : (
           <View style={styles.overview}>
             <View style={styles.overviewRow}>
@@ -174,7 +175,7 @@ export function BudgetPlannerScreen({ navigation }) {
         </View>
         <View style={styles.budgetList}>
           {loading ? (
-            <ActivityIndicator color={themeColors.gold} style={{ paddingVertical: 24 }} />
+            <LoadingSpinner inline />
           ) : budgets.length > 0 ? (
             budgets.map((b) => <BudgetCard key={b.id} budget={b} />)
           ) : (

@@ -8,12 +8,12 @@ import {
   RefreshControl,
   StyleSheet,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { Search, SlidersHorizontal, Plus, AlertCircle } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { colors as themeColors } from '../../theme/colors';
 import { ExpenseCard } from '../../components/ExpenseCard';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { borderRadius } from '../../theme/spacing';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { EXPENSE_CATEGORIES } from '../../utils/constants';
@@ -212,7 +212,7 @@ export function ExpenseListScreen({ navigation }) {
       {/* ── Expense list ── */}
       <View style={styles.list}>
         {loading && !refreshing ? (
-          <ActivityIndicator color={themeColors.gold} style={{ paddingVertical: 40 }} />
+          <LoadingSpinner inline />
         ) : filtered.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={[styles.emptyTitle, { color: themeColors.foreground[colorScheme] }]}>

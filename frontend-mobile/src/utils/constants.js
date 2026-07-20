@@ -7,6 +7,7 @@ export const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl ?? 'http://l
 export const ONBOARDING_STORAGE_KEY = '@expendora_onboarding_done';
 export const AUTH_TOKEN_KEY = '@expendora_auth_token';
 export const THEME_STORAGE_KEY = '@expendora_theme';
+export const BUDGET_STORAGE_KEY = '@expendora_monthly_budget';
 
 export const CURRENCY = 'LKR';
 export const CURRENCY_SYMBOL = 'Rs ';

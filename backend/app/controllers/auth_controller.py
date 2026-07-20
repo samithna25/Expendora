@@ -1,8 +1,9 @@
 from werkzeug.security import generate_password_hash, check_password_hash
+from bson import ObjectId
 from app.database.db import get_db
 from app.models.user_model import create_user
 from app.utils.jwt_utils import generate_token
-from flask import jsonify
+from flask import jsonify, request
 import re
 
 def validate_email(email):
@@ -92,7 +93,8 @@ def login_user(data):
                     'user': {
                         'id': user_id,
                         'name': name,
-                        'email': email
+                        'email': email,
+                        'monthly_budget': user.get('monthly_budget'),
                     },
                     'token': token
                 }
@@ -107,3 +109,40 @@ def login_user(data):
             'status': 'error',
             'message': 'Database connection failed'
         }), 500
+
+
+def update_profile(data):
+    """PUT /auth/profile — update name, monthly_budget, etc."""
+    if not data:
+        return jsonify({'status': 'error', 'message': 'No data provided'}), 400
+
+    user_id = request.current_user["user_id"]
+    db = get_db()
+    if db is None:
+        return jsonify({'status': 'error', 'message': 'Database connection failed'}), 500
+
+    updates = {}
+    if "name" in data:
+        updates["name"] = data["name"]
+    if "monthly_budget" in data:
+        val = data["monthly_budget"]
+        updates["monthly_budget"] = float(val) if val is not None else None
+
+    if not updates:
+        return jsonify({'status': 'error', 'message': 'No valid fields to update'}), 400
+
+    db.users.update_one({"_id": ObjectId(user_id)}, {"$set": updates})
+
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+    return jsonify({
+        'status': 'success',
+        'message': 'Profile updated',
+        'data': {
+            'user': {
+                'id': str(user['_id']),
+                'name': user.get('name', ''),
+                'email': user.get('email', ''),
+                'monthly_budget': user.get('monthly_budget'),
+            }
+        }
+    }), 200
