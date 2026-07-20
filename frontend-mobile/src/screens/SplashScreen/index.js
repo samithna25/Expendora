@@ -66,7 +66,7 @@ export function SplashScreen({ onFinish }) {
         </View>
       </View>
 
-      <Text style={styles.footer}>Powered by Cloud Automation · AI · OCR</Text>
+      <Text style={styles.footer}>Powered by Cloud Automation-new#</Text>
     </View>
   );
 }

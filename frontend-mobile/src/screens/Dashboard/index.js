@@ -51,7 +51,7 @@ export function DashboardScreen({ navigation }) {
         <View style={styles.bgOrb2} />
 
         <View style={styles.topRow}>
-          <BrandLogo size={22} variant={isDark ? 'white' : 'original'} animated={false} showSubtitle={false} />
+          <BrandLogo size={22} variant={isDark ? 'white' : 'original'} animated={true} spinDuration={2400} showSubtitle={false} />
           <TouchableOpacity style={[styles.notifBtn, { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
             <Bell size={16} color={themeColors.white} />
             <View style={styles.notifDot} />
