@@ -22,10 +22,11 @@ def get_dashboard_data():
     - Overspending alerts & budget threshold status
     """
     user_id = _get_user_id()
-    month = request.args.get("month")  # Optional YYYY-MM parameter
+    month = request.args.get("month")
+    budget = request.args.get("budget", type=float)
 
     try:
-        data = get_dashboard_analytics(user_id=user_id, month=month)
+        data = get_dashboard_analytics(user_id=user_id, month=month, total_monthly_limit=budget)
         return jsonify({
             "status": "success",
             "message": "Dashboard analytics retrieved successfully.",

@@ -1,21 +1,26 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
-import { Bell, ArrowUpRight, Sparkles, Plus, ScanLine, Send, PiggyBank, TrendingUp, AlertCircle } from 'lucide-react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Modal } from 'react-native';
+import { Bell, ArrowUpRight, Pencil, Plus, ScanLine, Send, PiggyBank, TrendingUp, AlertCircle, X, Check } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../context/ThemeContext';
 import { colors as themeColors } from '../../theme/colors';
 import { CategoryChart } from '../../components/CategoryChart';
 import { ExpenseCard } from '../../components/ExpenseCard';
+import { ReportCard } from '../../components/ReportCard';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { borderRadius, spacing } from '../../theme/spacing';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { useExpenses } from '../../context/ExpenseContext';
 import { useAuth } from '../../context/AuthContext';
-import { CURRENCY_SYMBOL } from '../../utils/constants';
+import { CURRENCY_SYMBOL, BUDGET_STORAGE_KEY } from '../../utils/constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { reportService } from '../../services/reportService';
+import { authService } from '../../services/authService';
 
 import { BrandLogo } from '../../components/BrandLogo';
 
-// ─── Default budget limit for "remaining" display ─────────────────────────
-const MONTHLY_BUDGET = 15000;
+// ─── Fallback budget limit when data is unavailable ────────────────────────
+const FALLBACK_BUDGET = 15000;
 
 export function DashboardScreen({ navigation }) {
   const { isDark } = useTheme();
@@ -24,10 +29,68 @@ export function DashboardScreen({ navigation }) {
   const { expenses, loading, error, totalSpent, categoryBreakdown, refresh } = useExpenses();
   const insets = useSafeAreaInsets();
 
+  // ─── User budget management ─────────────────────────────────────────────
+  const [userBudget, setUserBudget] = useState(null);
+  const [budgetLoaded, setBudgetLoaded] = useState(false);
+  const [budgetModalVisible, setBudgetModalVisible] = useState(false);
+  const [budgetInput, setBudgetInput] = useState('');
+
+  useEffect(() => {
+    AsyncStorage.getItem(BUDGET_STORAGE_KEY).then((stored) => {
+      if (stored) setUserBudget(Number(stored));
+      setBudgetLoaded(true);
+    });
+  }, []);
+
+  const openBudgetModal = useCallback(() => {
+    setBudgetInput(String(userBudget ?? FALLBACK_BUDGET));
+    setBudgetModalVisible(true);
+  }, [userBudget]);
+
+  const saveBudget = useCallback(async () => {
+    const val = Math.max(0, Number(budgetInput) || 0);
+    setUserBudget(val);
+    await AsyncStorage.setItem(BUDGET_STORAGE_KEY, String(val));
+    authService.updateProfile({ monthly_budget: val }).catch(() => {});
+    setBudgetModalVisible(false);
+  }, [budgetInput]);
+
+  // ─── Dashboard data ─────────────────────────────────────────────────────
+  const [dashboardData, setDashboardData] = useState(null);
+  const [dashLoading, setDashLoading] = useState(true);
+
+  const fetchDashboard = useCallback(async () => {
+    if (!budgetLoaded) return;
+    setDashLoading(true);
+    try {
+      const budget = userBudget ?? FALLBACK_BUDGET;
+      const res = await reportService.getDashboard(null, budget);
+      setDashboardData(res?.data ?? null);
+    } catch {
+      setDashboardData(null);
+    } finally {
+      setDashLoading(false);
+    }
+  }, [budgetLoaded, userBudget]);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  // ─── Derived values (user budget > backend > fallback) ──────────────────
+  const monthlyLimit = userBudget ?? dashboardData?.budget_status?.monthly_limit ?? FALLBACK_BUDGET;
+  const budgetRemaining = Math.max(0, monthlyLimit - totalSpent);
+  const pctUsed = monthlyLimit > 0 ? (totalSpent / monthlyLimit) * 100 : 0;
+  const topCategory = categoryBreakdown.length > 0
+    ? categoryBreakdown.reduce((a, b) => (a.value > b.value ? a : b))
+    : null;
+  const fallbackInsight = !topCategory
+    ? 'No expenses recorded for this period yet. Start adding transactions to view analytics.'
+    : `${topCategory.name} is your highest spending category (${((topCategory.value / monthlyLimit) * 100).toFixed(1)}% of total monthly budget).`;
+  const insightText = dashboardData?.insights ?? fallbackInsight;
+
   // 4 most recent expenses for the "Recent Transactions" strip
   const recentExpenses = expenses.slice(0, 4);
-
-  const budgetRemaining = Math.max(0, MONTHLY_BUDGET - totalSpent);
 
   // Normalise each expense to the shape ExpenseCard expects
   const normalise = (e) => ({
@@ -63,15 +126,18 @@ export function DashboardScreen({ navigation }) {
             {user?.name ? `Good morning, ${user.name.split(' ')[0]} 👋` : 'Good morning 👋'}
           </Text>
           <View style={styles.balanceRow}>
-            <View>
-              <Text style={[styles.balanceLabel, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }]}>
-                MONTHLY BUDGET
-              </Text>
+            <TouchableOpacity onPress={openBudgetModal} activeOpacity={0.7}>
+              <View style={styles.balanceLabelRow}>
+                <Text style={[styles.balanceLabel, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }]}>
+                  MONTHLY BUDGET
+                </Text>
+                <Pencil size={10} color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} />
+              </View>
               <Text style={[styles.balanceAmount, { color: themeColors.foreground[colorScheme] }]}>
                 <Text style={{ color: themeColors.gold }}>{CURRENCY_SYMBOL.trim()} </Text>
-                {String(MONTHLY_BUDGET.toFixed(0))}
+                {String(monthlyLimit.toFixed(0))}
               </Text>
-            </View>
+            </TouchableOpacity>
             <View style={[styles.trendBadge, { backgroundColor: 'rgba(34,197,94,0.15)' }]}>
               <TrendingUp size={12} color={themeColors.success} />
               <Text style={[styles.trendText, { color: themeColors.success }]}>Live</Text>
@@ -142,26 +208,10 @@ export function DashboardScreen({ navigation }) {
       </View>
 
       {/* ── AI Insight ── */}
-      <View
-        style={[
-          styles.insightCard,
-          { borderColor: 'rgba(250,204,21,0.3)', backgroundColor: isDark ? 'rgba(250,204,21,0.08)' : 'rgba(250,204,21,0.12)' },
-        ]}
-      >
-        <View style={styles.insightIcon}>
-          <Sparkles size={16} color={themeColors.black} />
-        </View>
-        <View style={styles.insightContent}>
-          <Text style={[styles.insightTitle, { color: themeColors.gold }]}>AI INSIGHT</Text>
-          <Text style={[styles.insightText, { color: themeColors.foreground[colorScheme] }]}>
-            {loading
-              ? 'Analysing your spending…'
-              : totalSpent > MONTHLY_BUDGET * 0.8
-              ? `You've used ${((totalSpent / MONTHLY_BUDGET) * 100).toFixed(0)}% of your budget. Consider reviewing recurring expenses.`
-              : `You're on track! ${formatCurrency(budgetRemaining)} left in your budget this month.`}
-          </Text>
-        </View>
-      </View>
+      <ReportCard
+        title="AI INSIGHT"
+        insight={dashLoading || loading ? 'Analysing your spending…' : insightText}
+      />
 
       {/* ── Error banner ── */}
       {error && (
@@ -199,7 +249,7 @@ export function DashboardScreen({ navigation }) {
           </TouchableOpacity>
         </View>
         {loading ? (
-          <ActivityIndicator color={themeColors.gold} style={{ paddingVertical: 24 }} />
+          <LoadingSpinner inline />
         ) : categoryBreakdown.length > 0 ? (
           <CategoryChart data={categoryBreakdown} />
         ) : (
@@ -221,7 +271,7 @@ export function DashboardScreen({ navigation }) {
         </View>
         <View style={styles.recentList}>
           {loading ? (
-            <ActivityIndicator color={themeColors.gold} style={{ paddingVertical: 20 }} />
+            <LoadingSpinner inline />
           ) : recentExpenses.length > 0 ? (
             recentExpenses.map((e) => (
               <ExpenseCard key={e.id ?? e._id} transaction={normalise(e)} />
@@ -233,6 +283,68 @@ export function DashboardScreen({ navigation }) {
           )}
         </View>
       </View>
+
+      {/* ── Budget Edit Modal ── */}
+      <Modal
+        visible={budgetModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setBudgetModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setBudgetModalVisible(false)}
+        >
+          <TouchableOpacity
+            style={[styles.modalCard, { backgroundColor: themeColors.card[colorScheme] }]}
+            activeOpacity={1}
+            onPress={() => {}}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: themeColors.foreground[colorScheme] }]}>
+                Set Monthly Budget
+              </Text>
+              <TouchableOpacity onPress={() => setBudgetModalVisible(false)}>
+                <X size={18} color={themeColors.muted[colorScheme]} />
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.modalHint, { color: themeColors.muted[colorScheme] }]}>
+              Enter your total spending limit for {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}.
+            </Text>
+            <View style={[styles.inputRow, { borderColor: themeColors.border[colorScheme] }]}>
+              <Text style={[styles.inputPrefix, { color: themeColors.foreground[colorScheme] }]}>
+                {CURRENCY_SYMBOL.trim()}
+              </Text>
+              <TextInput
+                style={[styles.modalInput, { color: themeColors.foreground[colorScheme] }]}
+                value={budgetInput}
+                onChangeText={setBudgetInput}
+                keyboardType="numeric"
+                placeholder="e.g. 50000"
+                placeholderTextColor={themeColors.muted[colorScheme]}
+                autoFocus
+                selectTextOnFocus
+              />
+            </View>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnSecondary, { borderColor: themeColors.border[colorScheme] }]}
+                onPress={() => setBudgetModalVisible(false)}
+              >
+                <Text style={[styles.modalBtnText, { color: themeColors.muted[colorScheme] }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: themeColors.gold }]}
+                onPress={saveBudget}
+              >
+                <Check size={14} color={themeColors.black} />
+                <Text style={[styles.modalBtnText, { color: themeColors.black }]}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </ScrollView>
   );
 }
@@ -332,6 +444,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginTop: 12,
   },
+  balanceLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   balanceLabel: { fontSize: 10, letterSpacing: 1, textTransform: 'uppercase' },
   balanceAmount: { fontSize: 34, fontWeight: '700', marginTop: 4 },
   trendBadge: {
@@ -364,27 +481,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actionLabel: { fontSize: 10, fontWeight: '600' },
-
-  insightCard: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: 24,
-    borderWidth: 1,
-    padding: 16,
-    gap: 12,
-  },
-  insightIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: themeColors.gold,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  insightContent: { flex: 1 },
-  insightTitle: { fontSize: 11, fontWeight: '700', letterSpacing: 1 },
-  insightText: { fontSize: 13, lineHeight: 18, marginTop: 4 },
 
   errorCard: {
     flexDirection: 'row',
@@ -428,4 +524,71 @@ const styles = StyleSheet.create({
   recentSeeAll: { fontSize: 11, fontWeight: '600' },
   recentList: { marginTop: 12, gap: 8 },
   emptyText: { textAlign: 'center', paddingVertical: 20, fontSize: 13, lineHeight: 20 },
+
+  // ── Budget edit modal ─────────────────────────────────────────────────
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 32,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: 24,
+    padding: 24,
+    gap: 16,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  modalHint: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 52,
+    gap: 8,
+  },
+  inputPrefix: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  modalInput: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '600',
+    height: '100%',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 14,
+    borderRadius: 16,
+  },
+  modalBtnSecondary: {
+    borderWidth: 1,
+  },
+  modalBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
 });

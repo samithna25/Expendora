@@ -6,7 +6,6 @@ import {
   ScrollView,
   Dimensions,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { Download, TrendingDown, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react-native';
@@ -15,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { colors as themeColors } from '../../theme/colors';
 import { CategoryChart } from '../../components/CategoryChart';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { borderRadius } from '../../theme/spacing';
 import { PERIOD_TABS, EXPENSE_CATEGORIES } from '../../utils/constants';
 import { formatCurrency } from '../../utils/formatters';
@@ -281,7 +281,7 @@ export function ReportsScreen() {
           )}
         </View>
         {trendLoading ? (
-          <ActivityIndicator color={themeColors.gold} style={{ paddingVertical: 40 }} />
+          <LoadingSpinner inline />
         ) : trendError ? (
           <Text style={[styles.emptyChart, { color: '#FB7185' }]}>{trendError}</Text>
         ) : (
@@ -300,7 +300,7 @@ export function ReportsScreen() {
           Category Breakdown
         </Text>
         {expLoading ? (
-          <ActivityIndicator color={themeColors.gold} style={{ paddingVertical: 24 }} />
+          <LoadingSpinner inline />
         ) : categoryBreakdown.length > 0 ? (
           <CategoryChart data={categoryBreakdown} />
         ) : (
@@ -322,7 +322,7 @@ export function ReportsScreen() {
         </Text>
         <View style={styles.budgetList}>
           {expLoading ? (
-            <ActivityIndicator color={themeColors.gold} />
+            <LoadingSpinner inline />
           ) : budgetBars.length > 0 ? (
             budgetBars.map((b) => <BudgetBar key={b.id} {...b} />)
           ) : (
