@@ -19,6 +19,7 @@ def connect_db():
         client.admin.command("ping")
         db = client.get_database("expendora")
         db["merchants"].create_index("name", unique=True)
+        db["sessions"].create_index("user_id")
         print("[OK] Connected to MongoDB Atlas")
     except ConnectionFailure as e:
         print(f"[ERROR] Failed to connect to MongoDB Atlas: {e}")

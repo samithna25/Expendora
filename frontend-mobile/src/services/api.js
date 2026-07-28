@@ -1,6 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL, AUTH_TOKEN_KEY } from '../utils/constants';
 
+let _onSessionExpired = null;
+
+export function setOnSessionExpiredHandler(handler) {
+  _onSessionExpired = handler;
+}
+
 class ApiClient {
   constructor() {
     this.baseUrl = API_BASE_URL;
@@ -26,7 +32,11 @@ class ApiClient {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: 'Request failed' }));
-        throw new Error(error.message || `Request failed with status ${response.status}`);
+        const msg = error.message || `Request failed with status ${response.status}`;
+        if (response.status === 401 && msg.toLowerCase().includes('session expired') && _onSessionExpired) {
+          _onSessionExpired();
+        }
+        throw new Error(msg);
       }
 
       return response.json();
@@ -73,7 +83,11 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Upload failed' }));
-      throw new Error(error.message || 'Upload failed');
+      const msg = error.message || 'Upload failed';
+      if (response.status === 401 && msg.toLowerCase().includes('session expired') && _onSessionExpired) {
+        _onSessionExpired();
+      }
+      throw new Error(msg);
     }
 
     return response.json();

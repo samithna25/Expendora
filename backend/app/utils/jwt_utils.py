@@ -7,11 +7,11 @@ from app.config.config import Config
 ACCESS_TOKEN_EXPIRY_HOURS = 24
 
 
-def generate_token(user_id: str, email: str, token_version: int = 0) -> str:
+def generate_token(user_id: str, email: str, session_id: str) -> str:
     payload = {
         "user_id": user_id,
         "email": email,
-        "token_version": token_version,
+        "session_id": session_id,
         "exp": datetime.now(timezone.utc) + timedelta(hours=ACCESS_TOKEN_EXPIRY_HOURS),
         "iat": datetime.now(timezone.utc)
     }
