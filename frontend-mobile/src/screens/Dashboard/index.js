@@ -40,6 +40,15 @@ export function DashboardScreen({ navigation }) {
       if (stored) setUserBudget(Number(stored));
       setBudgetLoaded(true);
     });
+
+    authService.getProfile().then((data) => {
+      const serverBudget = data?.user?.monthly_budget;
+      if (serverBudget != null) {
+        const numericBudget = Number(serverBudget);
+        setUserBudget(numericBudget);
+        AsyncStorage.setItem(BUDGET_STORAGE_KEY, String(numericBudget));
+      }
+    }).catch(() => {});
   }, []);
 
   const openBudgetModal = useCallback(() => {
@@ -51,7 +60,17 @@ export function DashboardScreen({ navigation }) {
     const val = Math.max(0, Number(budgetInput) || 0);
     setUserBudget(val);
     await AsyncStorage.setItem(BUDGET_STORAGE_KEY, String(val));
-    authService.updateProfile({ monthly_budget: val }).catch(() => {});
+    try {
+      const response = await authService.updateProfile({ monthly_budget: val });
+      const serverBudget = response?.data?.user?.monthly_budget;
+      if (serverBudget != null) {
+        const numericBudget = Number(serverBudget);
+        setUserBudget(numericBudget);
+        await AsyncStorage.setItem(BUDGET_STORAGE_KEY, String(numericBudget));
+      }
+    } catch (err) {
+      console.warn('Failed to sync budget to server:', err);
+    }
     setBudgetModalVisible(false);
   }, [budgetInput]);
 

@@ -20,14 +20,13 @@ export const authService = {
   },
 
   async getProfile(token) {
-    return tryOrMock(
-      () => api.get('/auth/profile'),
-      { id: '1', name: 'Test User', email: 'test@expendora.app' },
-    );
+    const response = await api.get('/auth/profile');
+    return response.data;
   },
 
   async checkSession() {
-    return api.get('/auth/profile');
+    const response = await api.get('/auth/profile');
+    return response.data;
   },
 
   async updateProfile(data) {

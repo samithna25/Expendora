@@ -127,6 +127,30 @@ def login_user(data):
         }), 500
 
 
+def get_profile_data():
+    """GET /auth/profile — return the authenticated user's profile data."""
+    user_id = request.current_user["user_id"]
+    db = get_db()
+    if db is None:
+        return jsonify({'status': 'error', 'message': 'Database connection failed'}), 500
+
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        return jsonify({'status': 'error', 'message': 'User not found'}), 404
+
+    return jsonify({
+        'status': 'success',
+        'data': {
+            'user': {
+                'id': str(user['_id']),
+                'name': user.get('name', ''),
+                'email': user.get('email', ''),
+                'monthly_budget': user.get('monthly_budget'),
+            }
+        }
+    }), 200
+
+
 def update_profile(data):
     """PUT /auth/profile — update name, monthly_budget, etc."""
     if not data:
