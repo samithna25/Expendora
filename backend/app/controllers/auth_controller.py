@@ -54,7 +54,7 @@ def register_user(data):
     result = db.users.insert_one(user_data)
     user_id = str(result.inserted_id)
 
-    token = generate_token(user_id, email)
+    token = generate_token(user_id, email, token_version=0)
 
     return jsonify({
         'status': 'success',
@@ -84,8 +84,16 @@ def login_user(data):
         user = db.users.find_one({'email': email})
         if user and check_password_hash(user['password'], password):
             user_id = str(user['_id'])
+
+            # Increment token_version to invalidate all previous sessions
+            new_version = user.get("token_version", 0) + 1
+            db.users.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": {"token_version": new_version}}
+            )
+
             name = user.get('name', '')
-            token = generate_token(user_id, email)
+            token = generate_token(user_id, email, token_version=new_version)
             return jsonify({
                 'status': 'success',
                 'message': 'Login successful',
@@ -145,4 +153,31 @@ def update_profile(data):
                 'monthly_budget': user.get('monthly_budget'),
             }
         }
+    }), 200
+
+
+def logout_user():
+    """POST /auth/logout — invalidate current session by bumping token_version."""
+    user_id = request.current_user["user_id"]
+    db = get_db()
+    if db is None:
+        return jsonify({'status': 'error', 'message': 'Database connection failed'}), 500
+
+    user = db.users.find_one(
+        {"_id": ObjectId(user_id)},
+        {"token_version": 1}
+    )
+    if not user:
+        return jsonify({'status': 'error', 'message': 'User not found'}), 404
+
+    current_version = user.get("token_version", 0)
+
+    db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"token_version": current_version + 1}}
+    )
+
+    return jsonify({
+        'status': 'success',
+        'message': 'Logged out successfully. Session invalidated.'
     }), 200

@@ -7,5 +7,6 @@ def create_user(name, email, hashed_password):
         "email": email,
         "password": hashed_password,
         "monthly_budget": None,
+        "token_version": 0,
         "created_at": datetime.now(timezone.utc)
     }
