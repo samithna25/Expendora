@@ -26,6 +26,10 @@ export const authService = {
     );
   },
 
+  async checkSession() {
+    return api.get('/auth/profile');
+  },
+
   async updateProfile(data) {
     return tryOrMock(() => api.put('/auth/profile', data), data);
   },

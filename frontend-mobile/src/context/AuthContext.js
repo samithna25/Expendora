@@ -33,6 +33,22 @@ export function AuthProvider({ children }) {
     loadStoredAuth();
   }, []);
 
+  useEffect(() => {
+    if (!isAuthenticated || sessionExpired) return;
+
+    const check = async () => {
+      try {
+        await authService.checkSession();
+      } catch {
+        // session expiry is already handled by the api client
+      }
+    };
+    check();
+
+    const interval = setInterval(check, 5000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, sessionExpired]);
+
   const loadStoredAuth = async () => {
     try {
       const storedToken = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
