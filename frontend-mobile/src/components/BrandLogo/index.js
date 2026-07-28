@@ -70,7 +70,7 @@ export function BrandLogo({
           resizeMode="contain"
         />
 
-        <View style={[styles.coinContainer, { width: coinSize, height: coinSize, marginHorizontal: -size * 0.08 }]}>
+        <View style={[styles.coinContainer, { width: coinSize, height: coinSize, marginLeft: size * 0.04, marginRight: size * 0.04 }]}>
           <Animated.Image
             source={ASSETS.coin}
             style={[

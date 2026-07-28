@@ -105,7 +105,7 @@ export function DashboardScreen({ navigation }) {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: themeColors.background[colorScheme] }]}
-      contentContainerStyle={{ paddingBottom: 110 + Math.max(insets.bottom, 12) }}
+      contentContainerStyle={{ paddingBottom: 120 + Math.max(insets.bottom, 16) }}
       showsVerticalScrollIndicator={false}
     >
       {/* ── Header ── */}
@@ -170,48 +170,53 @@ export function DashboardScreen({ navigation }) {
       </View>
 
       {/* ── Quick Actions ── */}
-      <View style={styles.quickActions}>
-        {[
-          {
-            Icon: ScanLine,
-            label: 'Scan',
-            gold: true,
-            onPress: () => navigation?.navigate('UploadReceipt'),
-          },
-          {
-            Icon: Plus,
-            label: 'Add',
-            onPress: () => navigation?.navigate('AddExpenseModal'),
-          },
-          { Icon: Send, label: 'Send', onPress: () => {} },
-          { Icon: PiggyBank, label: 'Save', onPress: () => {} },
-        ].map((a) => (
-          <TouchableOpacity key={a.label} style={styles.actionItem} onPress={a.onPress}>
-            <View
-              style={[
-                styles.actionIcon,
-                {
-                  backgroundColor: a.gold ? themeColors.gold : themeColors.secondary[colorScheme],
-                },
-              ]}
-            >
-              <a.Icon
-                size={20}
-                color={a.gold ? themeColors.black : themeColors.foreground[colorScheme]}
-              />
-            </View>
-            <Text style={[styles.actionLabel, { color: themeColors.muted[colorScheme] }]}>
-              {a.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      <View style={styles.quickActionsSection}>
+        <Text style={[styles.sectionLabel, { color: themeColors.muted[colorScheme] }]}>QUICK ACTIONS</Text>
+        <View style={styles.quickActions}>
+          {[
+            {
+              Icon: ScanLine,
+              label: 'Scan',
+              gold: true,
+              onPress: () => navigation?.navigate('UploadReceipt'),
+            },
+            {
+              Icon: Plus,
+              label: 'Add',
+              onPress: () => navigation?.navigate('AddExpenseModal'),
+            },
+            { Icon: Send, label: 'Send', onPress: () => {} },
+            { Icon: PiggyBank, label: 'Save', onPress: () => {} },
+          ].map((a) => (
+            <TouchableOpacity key={a.label} style={styles.actionItem} onPress={a.onPress}>
+              <View
+                style={[
+                  styles.actionIcon,
+                  {
+                    backgroundColor: a.gold ? themeColors.gold : themeColors.secondary[colorScheme],
+                  },
+                ]}
+              >
+                <a.Icon
+                  size={20}
+                  color={a.gold ? themeColors.black : themeColors.foreground[colorScheme]}
+                />
+              </View>
+              <Text style={[styles.actionLabel, { color: themeColors.muted[colorScheme] }]}>
+                {a.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       {/* ── AI Insight ── */}
-      <ReportCard
-        title="AI INSIGHT"
-        insight={dashLoading || loading ? 'Analysing your spending…' : insightText}
-      />
+      <View style={styles.sectionWrapper}>
+        <ReportCard
+          title="AI INSIGHT"
+          insight={dashLoading || loading ? 'Analysing your spending…' : insightText}
+        />
+      </View>
 
       {/* ── Error banner ── */}
       {error && (
@@ -225,48 +230,52 @@ export function DashboardScreen({ navigation }) {
       )}
 
       {/* ── Spending by Category Chart ── */}
-      <View
-        style={[
-          styles.chartCard,
-          { backgroundColor: themeColors.card[colorScheme], borderColor: themeColors.border[colorScheme] },
-        ]}
-      >
-        <View style={styles.chartHeader}>
-          <View>
-            <Text style={[styles.chartTitle, { color: themeColors.foreground[colorScheme] }]}>
-              Spending by Category
-            </Text>
-            <Text style={[styles.chartSub, { color: themeColors.muted[colorScheme] }]}>
-              {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
-            </Text>
-          </View>
+      <View style={styles.sectionWrapper}>
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: themeColors.foreground[colorScheme] }]}>
+            Spending by Category
+          </Text>
           <TouchableOpacity
-            style={styles.chartAction}
+            style={styles.seeAllBtn}
             onPress={() => navigation?.navigate('Expenses')}
           >
-            <Text style={[styles.chartActionText, { color: themeColors.gold }]}>Details</Text>
+            <Text style={[styles.seeAllText, { color: themeColors.gold }]}>Details</Text>
             <ArrowUpRight size={12} color={themeColors.gold} />
           </TouchableOpacity>
         </View>
-        {loading ? (
-          <LoadingSpinner inline />
-        ) : categoryBreakdown.length > 0 ? (
-          <CategoryChart data={categoryBreakdown} />
-        ) : (
-          <Text style={[styles.emptyChart, { color: themeColors.muted[colorScheme] }]}>
-            No spending data yet
+        <View
+          style={[
+            styles.chartCard,
+            { backgroundColor: themeColors.card[colorScheme], borderColor: themeColors.border[colorScheme] },
+          ]}
+        >
+          <Text style={[styles.chartSub, { color: themeColors.muted[colorScheme] }]}>
+            {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
           </Text>
-        )}
+          {loading ? (
+            <LoadingSpinner inline />
+          ) : categoryBreakdown.length > 0 ? (
+            <CategoryChart data={categoryBreakdown} />
+          ) : (
+            <Text style={[styles.emptyChart, { color: themeColors.muted[colorScheme] }]}>
+              No spending data yet
+            </Text>
+          )}
+        </View>
       </View>
 
       {/* ── Recent Transactions ── */}
-      <View style={styles.recentSection}>
-        <View style={styles.recentHeader}>
-          <Text style={[styles.recentTitle, { color: themeColors.foreground[colorScheme] }]}>
+      <View style={styles.sectionWrapper}>
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: themeColors.foreground[colorScheme] }]}>
             Recent Transactions
           </Text>
-          <TouchableOpacity onPress={() => navigation?.navigate('Expenses')}>
-            <Text style={[styles.recentSeeAll, { color: themeColors.gold }]}>See all</Text>
+          <TouchableOpacity
+            style={styles.seeAllBtn}
+            onPress={() => navigation?.navigate('Expenses')}
+          >
+            <Text style={[styles.seeAllText, { color: themeColors.gold }]}>See all</Text>
+            <ArrowUpRight size={12} color={themeColors.gold} />
           </TouchableOpacity>
         </View>
         <View style={styles.recentList}>
@@ -466,63 +475,63 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 18, fontWeight: '700', marginTop: 4 },
   statSub: { fontSize: 9, marginTop: 2 },
 
+  // ── Shared section layout ───────────────────────────────────────────────
+  sectionWrapper: {
+    marginHorizontal: 20,
+    marginTop: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: { fontSize: 15, fontWeight: '700', letterSpacing: 0.2 },
+  sectionLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 10 },
+  seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  seeAllText: { fontSize: 12, fontWeight: '600' },
+
+  quickActionsSection: {
+    marginHorizontal: 20,
+    marginTop: 24,
+  },
   quickActions: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 20,
-    marginTop: 20,
+    justifyContent: 'space-between',
   },
-  actionItem: { alignItems: 'center', gap: 6 },
+  actionItem: { alignItems: 'center', gap: 8, flex: 1 },
   actionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    width: 52,
+    height: 52,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  actionLabel: { fontSize: 10, fontWeight: '600' },
+  actionLabel: { fontSize: 11, fontWeight: '600' },
 
   errorCard: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 20,
-    marginTop: 12,
+    marginTop: 14,
     borderRadius: 16,
     borderWidth: 1,
-    padding: 12,
+    padding: 14,
     gap: 8,
   },
   errorText: { flex: 1, fontSize: 12, color: '#FB7185' },
   retryText: { fontSize: 12, fontWeight: '700', color: themeColors.gold },
 
   chartCard: {
-    marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: 24,
+    borderRadius: 20,
     borderWidth: 1,
-    padding: 20,
+    padding: 16,
+    paddingTop: 14,
   },
-  chartHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  chartTitle: { fontSize: 14, fontWeight: '700' },
-  chartSub: { fontSize: 11, marginTop: 2 },
-  chartAction: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  chartActionText: { fontSize: 11, fontWeight: '600' },
+  chartSub: { fontSize: 11, marginBottom: 12 },
   emptyChart: { textAlign: 'center', paddingVertical: 24, fontSize: 13 },
 
-  recentSection: { marginHorizontal: 20, marginTop: 20, marginBottom: 100 },
-  recentHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  recentTitle: { fontSize: 14, fontWeight: '700' },
-  recentSeeAll: { fontSize: 11, fontWeight: '600' },
-  recentList: { marginTop: 12, gap: 8 },
+  recentList: { gap: 10 },
   emptyText: { textAlign: 'center', paddingVertical: 20, fontSize: 13, lineHeight: 20 },
 
   // ── Budget edit modal ─────────────────────────────────────────────────
