@@ -33,6 +33,8 @@ export function AuthProvider({ children }) {
     loadStoredAuth();
   }, []);
 
+  const isAuthenticated = !!token;
+
   useEffect(() => {
     if (!isAuthenticated || sessionExpired) return;
 
@@ -43,11 +45,11 @@ export function AuthProvider({ children }) {
         // session expiry is already handled by the api client
       }
     };
-    check();
 
-    const interval = setInterval(check, 5000);
+    check();
+    const interval = setInterval(check, 1000);
     return () => clearInterval(interval);
-  }, [isAuthenticated, sessionExpired]);
+  }, [isAuthenticated, sessionExpired, token]);
 
   const loadStoredAuth = async () => {
     try {

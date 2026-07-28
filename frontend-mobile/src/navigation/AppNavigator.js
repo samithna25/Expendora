@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -43,7 +43,7 @@ export function AppNavigator() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.root}>
       <NavigationContainer
       theme={{
         ...DefaultTheme,
@@ -85,7 +85,22 @@ export function AppNavigator() {
       </Stack.Navigator>
     </NavigationContainer>
 
-    {sessionExpired && <SessionExpiredOverlay onLoginPress={clearSessionExpired} />}
+    <View
+      pointerEvents={sessionExpired ? 'auto' : 'none'}
+      style={styles.overlayContainer}
+    >
+      {sessionExpired && <SessionExpiredOverlay onLoginPress={clearSessionExpired} />}
+    </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  overlayContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 9999,
+  },
+});
