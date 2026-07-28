@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Modal } from 'react-native';
-import { Bell, ArrowUpRight, Pencil, Plus, ScanLine, Send, PiggyBank, TrendingUp, AlertCircle, X, Check } from 'lucide-react-native';
+import { Bell, ArrowUpRight, Pencil, Plus, ScanLine, TrendingUp, AlertCircle, X, Check } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../context/ThemeContext';
 import { colors as themeColors } from '../../theme/colors';
@@ -109,12 +109,12 @@ export function DashboardScreen({ navigation }) {
       showsVerticalScrollIndicator={false}
     >
       {/* ── Header ── */}
-      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold, paddingTop: Math.max(insets.top, 24) + 12 }]}>
+      <View style={[styles.header, { backgroundColor: '#0D0D0D', paddingTop: Math.max(insets.top, 24) + 12 }]}>
         <View style={styles.bgOrb1} />
         <View style={styles.bgOrb2} />
 
         <View style={styles.topRow}>
-          <BrandLogo size={22} variant={isDark ? 'white' : 'original'} animated={true} spinDuration={2400} showSubtitle={false} />
+          <BrandLogo size={22} variant="white" animated={true} spinDuration={2400} showSubtitle={false} />
           <TouchableOpacity style={[styles.notifBtn, { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
             <Bell size={16} color={themeColors.white} />
             <View style={styles.notifDot} />
@@ -122,16 +122,16 @@ export function DashboardScreen({ navigation }) {
         </View>
 
         <View style={styles.balanceSection}>
-          <Text style={[styles.greeting, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }]}>
+          <Text style={[styles.greeting, { color: 'rgba(245,230,200,0.6)' }]}>
             {user?.name ? `Good morning, ${user.name.split(' ')[0]} 👋` : 'Good morning 👋'}
           </Text>
           <View style={styles.balanceRow}>
             <TouchableOpacity onPress={openBudgetModal} activeOpacity={0.7}>
               <View style={styles.balanceLabelRow}>
-                <Text style={[styles.balanceLabel, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }]}>
+                <Text style={[styles.balanceLabel, { color: 'rgba(245,230,200,0.55)' }]}>
                   MONTHLY BUDGET
                 </Text>
-                <Pencil size={10} color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} />
+                <Pencil size={10} color="rgba(245,230,200,0.45)" />
               </View>
               <Text style={[styles.balanceAmount, { color: themeColors.foreground[colorScheme] }]}>
                 <Text style={{ color: themeColors.gold }}>{CURRENCY_SYMBOL.trim()} </Text>
@@ -185,8 +185,6 @@ export function DashboardScreen({ navigation }) {
               label: 'Add',
               onPress: () => navigation?.navigate('AddExpenseModal'),
             },
-            { Icon: Send, label: 'Send', onPress: () => {} },
-            { Icon: PiggyBank, label: 'Save', onPress: () => {} },
           ].map((a) => (
             <TouchableOpacity key={a.label} style={styles.actionItem} onPress={a.onPress}>
               <View
@@ -497,9 +495,10 @@ const styles = StyleSheet.create({
   },
   quickActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    gap: 24,
   },
-  actionItem: { alignItems: 'center', gap: 8, flex: 1 },
+  actionItem: { alignItems: 'center', gap: 8, width: 72 },
   actionIcon: {
     width: 52,
     height: 52,

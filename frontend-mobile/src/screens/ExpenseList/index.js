@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { Search, SlidersHorizontal, Plus, AlertCircle } from 'lucide-react-native';
+import { Search, Plus, AlertCircle } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { colors as themeColors } from '../../theme/colors';
 import { ExpenseCard } from '../../components/ExpenseCard';
@@ -148,14 +148,6 @@ export function ExpenseListScreen({ navigation }) {
               style={[styles.addBtn, { backgroundColor: themeColors.gold }]}
             >
               <Plus size={16} color={themeColors.black} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.filterBtn,
-                { borderColor: themeColors.border[colorScheme], backgroundColor: themeColors.card[colorScheme] },
-              ]}
-            >
-              <SlidersHorizontal size={16} color={themeColors.foreground[colorScheme]} />
             </TouchableOpacity>
           </View>
         </View>
