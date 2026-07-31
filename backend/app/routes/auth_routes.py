@@ -1,5 +1,13 @@
 from flask import Blueprint, request, jsonify
-from app.controllers.auth_controller import register_user, login_user, get_profile_data, update_profile, logout_user
+from app.controllers.auth_controller import (
+    register_user,
+    login_user,
+    get_profile_data,
+    update_profile,
+    logout_user,
+    forgot_password,
+    reset_password,
+)
 from app.middleware.auth_middleware import require_auth
 from datetime import datetime
 
@@ -30,6 +38,16 @@ def profile():
 @require_auth
 def logout():
     return logout_user()
+
+@auth_bp.route('/forgot-password', methods=['POST'])
+def forgot_password_route():
+    data = request.get_json()
+    return forgot_password(data)
+
+@auth_bp.route('/reset-password', methods=['POST'])
+def reset_password_route():
+    data = request.get_json()
+    return reset_password(data)
 
 def init_routes(app):
     app.register_blueprint(auth_bp)

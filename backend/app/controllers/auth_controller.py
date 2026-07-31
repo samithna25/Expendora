@@ -1,11 +1,17 @@
-from datetime import datetime, timezone
-from werkzeug.security import generate_password_hash, check_password_hash
+import hashlib
+import re
+import secrets
+from datetime import datetime, timedelta, timezone
+
 from bson import ObjectId
+from flask import jsonify, request
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from app.database.db import get_db
 from app.models.user_model import create_user
+from app.services.n8n_service import trigger_password_reset_email
 from app.utils.jwt_utils import generate_token
-from flask import jsonify, request
-import re
+from app.utils.password_utils import hash_password
 
 def validate_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -13,6 +19,15 @@ def validate_email(email):
 
 def validate_password(password):
     return len(password) >= 6
+
+
+def validate_reset_password(password):
+    return len(password) >= 8
+
+
+FORGOT_PASSWORD_MESSAGE = (
+    "If this email is registered, a password reset link has been sent."
+)
 
 def register_user(data):
     if not data or 'email' not in data or 'password' not in data:
@@ -200,4 +215,115 @@ def logout_user():
     return jsonify({
         'status': 'success',
         'message': 'Logged out successfully.'
+    }), 200
+
+
+def forgot_password(data):
+    """POST /auth/forgot-password — generate token and trigger n8n reset email."""
+    if not data or not data.get("email"):
+        return jsonify({
+            "success": False,
+            "code": "MISSING_FIELDS",
+            "message": "Email is required.",
+        }), 400
+
+    email = data["email"].strip().lower()
+
+    if not validate_email(email):
+        return jsonify({
+            "success": False,
+            "code": "INVALID_EMAIL",
+            "message": "Email address format is invalid.",
+        }), 400
+
+    db = get_db()
+    if db is not None:
+        user = db.users.find_one({"email": email})
+        if user:
+            plain_token = secrets.token_urlsafe(32)
+            token_hash = hashlib.sha256(plain_token.encode()).hexdigest()
+            expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+
+            db.reset_tokens.delete_many({"user_id": user["_id"], "used": False})
+            db.reset_tokens.insert_one({
+                "user_id": user["_id"],
+                "token_hash": token_hash,
+                "expires_at": expires_at,
+                "used": False,
+                "created_at": datetime.now(timezone.utc),
+            })
+
+            trigger_password_reset_email(
+                email=email,
+                reset_token=plain_token,
+                expires_at=expires_at.isoformat(),
+                user_name=user.get("name", ""),
+            )
+
+    return jsonify({
+        "success": True,
+        "message": FORGOT_PASSWORD_MESSAGE,
+    }), 200
+
+
+def reset_password(data):
+    """POST /auth/reset-password — verify token and update password."""
+    if not data:
+        return jsonify({
+            "success": False,
+            "code": "MISSING_FIELDS",
+            "message": "Reset token and new password are required.",
+        }), 400
+
+    reset_token = data.get("reset_token") or data.get("token")
+    new_password = data.get("new_password") or data.get("password")
+
+    if not reset_token or not new_password:
+        return jsonify({
+            "success": False,
+            "code": "MISSING_FIELDS",
+            "message": "Reset token and new password are required.",
+        }), 400
+
+    if not validate_reset_password(new_password):
+        return jsonify({
+            "success": False,
+            "code": "WEAK_PASSWORD",
+            "message": "Password must be at least 8 characters.",
+        }), 400
+
+    db = get_db()
+    if db is None:
+        return jsonify({
+            "success": False,
+            "message": "Database connection failed",
+        }), 500
+
+    token_hash = hashlib.sha256(reset_token.encode()).hexdigest()
+    token_doc = db.reset_tokens.find_one({
+        "token_hash": token_hash,
+        "used": False,
+        "expires_at": {"$gt": datetime.now(timezone.utc)},
+    })
+
+    if not token_doc:
+        return jsonify({
+            "success": False,
+            "code": "INVALID_TOKEN",
+            "message": "Reset token is invalid or has expired.",
+        }), 400
+
+    db.users.update_one(
+        {"_id": token_doc["user_id"]},
+        {"$set": {"password": hash_password(new_password)}},
+    )
+    db.reset_tokens.update_one(
+        {"_id": token_doc["_id"]},
+        {"$set": {"used": True, "used_at": datetime.now(timezone.utc)}},
+    )
+    db.sessions.delete_many({"user_id": token_doc["user_id"]})
+
+    return jsonify({
+        "success": True,
+        "message": "Password has been reset successfully. Please log in.",
     }), 200

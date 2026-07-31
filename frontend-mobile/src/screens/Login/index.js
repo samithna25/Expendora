@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Mail, Lock, ArrowRight, Apple } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { InputField } from '../../components/InputField';
@@ -7,6 +7,7 @@ import { CustomButton } from '../../components/CustomButton';
 import { colors } from '../../theme/colors';
 import { isValidEmail } from '../../utils/validators';
 import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/authService';
 import { BrandLogo } from '../../components/BrandLogo';
 
 export function LoginScreen() {
@@ -29,6 +30,23 @@ export function LoginScreen() {
       await login(email, password);
     } catch (e) {
       setErrors({ general: e.message || 'Invalid credentials' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!isValidEmail(email)) {
+      setErrors({ email: 'Enter valid email to reset password' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authService.forgotPassword(email);
+      Alert.alert('Reset Password', 'If this email is registered, a password reset link has been sent.');
+    } catch (e) {
+      Alert.alert('Error', 'Failed to request password reset');
     } finally {
       setLoading(false);
     }
@@ -65,7 +83,7 @@ export function LoginScreen() {
             error={errors.password}
           />
 
-          <TouchableOpacity onPress={() => {}} style={styles.forgotRow}>
+          <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotRow}>
             <Text style={styles.forgotText}>Forgot password?</Text>
           </TouchableOpacity>
 
