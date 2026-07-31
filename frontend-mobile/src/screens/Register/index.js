@@ -42,7 +42,7 @@ export function RegisterScreen() {
       <View style={styles.bgOrb2} />
 
       <View style={styles.content}>
-        <BrandLogo size={32} variant="white" animated={false} showSubtitle={false} style={{ marginBottom: 12 }} />
+        <BrandLogo size={32} variant="white" animated={true} spinDuration={2000} showSubtitle={false} style={{ marginBottom: 12 }} />
 
         <View style={styles.headerText}>
           <Text style={styles.title}>Create account</Text>

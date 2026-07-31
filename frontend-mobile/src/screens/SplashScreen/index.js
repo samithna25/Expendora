@@ -50,7 +50,7 @@ export function SplashScreen({ onFinish }) {
       <View style={styles.center}>
         <View style={styles.logoWrap}>
           <View style={styles.pulseGlow} />
-          <BrandLogo size={42} variant="white" animated={true} showSubtitle={true} />
+          <BrandLogo size={28} variant="white" animated={true} showSubtitle={true} />
         </View>
 
         <View style={styles.loader}>

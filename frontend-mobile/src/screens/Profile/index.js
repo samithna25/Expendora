@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Switch } from 'react-native';
-import { Bell, ChevronRight, CreditCard, HelpCircle, LogOut, Star } from 'lucide-react-native';
+import { Bell, ChevronRight, HelpCircle, LogOut, Star } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { colors as themeColors } from '../../theme/colors';
@@ -55,7 +55,6 @@ export function ProfileScreen() {
             ACCOUNT
           </Text>
           <View style={styles.menuGroup}>
-            <Row Icon={CreditCard} label="Payment Methods" right="2 cards" isDark={isDark} />
             <Row Icon={Bell} label="Notifications" right="On" isDark={isDark} />
           </View>
         </View>

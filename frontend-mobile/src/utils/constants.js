@@ -13,14 +13,14 @@ export const CURRENCY = 'LKR';
 export const CURRENCY_SYMBOL = 'Rs ';
 
 export const EXPENSE_CATEGORIES = [
-  { id: 'food', name: 'Food & Drinks', icon: 'UtensilsCrossed', color: '#FACC15' },
-  { id: 'transport', name: 'Transport', icon: 'Car', color: '#60A5FA' },
-  { id: 'shopping', name: 'Shopping', icon: 'ShoppingBag', color: '#F472B6' },
-  { id: 'bills', name: 'Bills', icon: 'Receipt', color: '#A78BFA' },
-  { id: 'entertainment', name: 'Entertainment', icon: 'Music', color: '#34D399' },
-  { id: 'health', name: 'Health', icon: 'HeartPulse', color: '#FB7185' },
-  { id: 'education', name: 'Education', icon: 'GraduationCap', color: '#FBBF24' },
-  { id: 'other', name: 'Other', icon: 'Wallet', color: '#94A3B8' },
+  { id: 'food',          name: 'Food & Drinks',  icon: 'UtensilsCrossed', color: '#FACC15' },  // Pure Gold
+  { id: 'transport',     name: 'Transport',       icon: 'Car',             color: '#D4A017' },  // Dark Gold
+  { id: 'shopping',      name: 'Shopping',        icon: 'ShoppingBag',     color: '#C8973A' },  // Amber Gold
+  { id: 'bills',         name: 'Bills',           icon: 'Receipt',         color: '#92703A' },  // Bronze
+  { id: 'entertainment', name: 'Entertainment',   icon: 'Music',           color: '#B8860B' },  // Goldenrod
+  { id: 'health',        name: 'Health',          icon: 'HeartPulse',      color: '#E8C547' },  // Bright Gold
+  { id: 'education',     name: 'Education',       icon: 'GraduationCap',   color: '#6B5320' },  // Deep Bronze
+  { id: 'other',         name: 'Other',           icon: 'Wallet',          color: '#4A3720' },  // Dark Umber
 ];
 
 export const PERIOD_TABS = ['Weekly', 'Monthly', 'Yearly'];

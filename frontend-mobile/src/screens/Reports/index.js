@@ -108,7 +108,7 @@ function BudgetBar({ name, spent, limit, color }) {
               : { color: themeColors.muted[colorScheme] },
           ]}
         >
-          {formatCurrency(spent)} / {formatCurrency(limit)}
+          {formatCurrency(spent)}
         </Text>
       </View>
       <View style={[styles.budgetBarBg, { backgroundColor: themeColors.secondary[colorScheme] }]}>
