@@ -31,10 +31,10 @@ export function ProfileScreen() {
           </View>
           <View style={styles.profileInfo}>
             <Text style={[styles.name, { color: themeColors.white }]}>
-              {user?.name || 'Alex Morgan'}
+              {user?.name}
             </Text>
             <Text style={[styles.email, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }]}>
-              {user?.email || 'alex.morgan@expendora.com'}
+              {user?.email}
             </Text>
             <View style={styles.proBadge}>
               <Text style={styles.proBadgeText}>PRO MEMBER</Text>
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     width: 176,
     height: 176,
     borderRadius: 88,
-    backgroundColor: 'rgba(250,204,21,0.25)',
+    backgroundColor: 'rgba(249,115,22,0.25)',
   },
   profileSection: { flexDirection: 'row', gap: 16, marginTop: 24, position: 'relative' },
   avatar: {
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(250,204,21,0.2)',
+    backgroundColor: 'rgba(249,115,22,0.2)',
     alignSelf: 'flex-start',
   },
   proBadgeText: { fontSize: 10, fontWeight: '700', color: themeColors.gold },
