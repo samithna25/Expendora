@@ -7,12 +7,13 @@ from app import create_app
 
 
 MOCK_USER_ID = "507f1f77bcf86cd799439011"
-MOCK_EMAIL = "test@example.com"
 MOCK_EXPENSE_ID = "507f1f77bcf86cd799439012"
+
+MOCK_SESSION_ID = "507f1f77bcf86cd799439099"
 
 
 def _mock_payload():
-    return {"user_id": MOCK_USER_ID, "email": MOCK_EMAIL}
+    return {"user_id": MOCK_USER_ID, "email": "test@example.com", "session_id": MOCK_SESSION_ID}
 
 
 def _fake_expense_doc(overrides=None):
@@ -48,9 +49,18 @@ def client(app):
 
 @pytest.fixture(autouse=True)
 def mock_auth():
-    with patch("app.middleware.auth_middleware.verify_token") as mock:
-        mock.return_value = _mock_payload()
-        yield mock
+    mock_session_doc = {"_id": ObjectId(MOCK_SESSION_ID), "user_id": ObjectId(MOCK_USER_ID)}
+    mock_sessions = MagicMock()
+    mock_sessions.find_one.return_value = mock_session_doc
+    mock_db = MagicMock()
+    mock_db.sessions = mock_sessions
+
+    with (
+        patch("app.middleware.auth_middleware.verify_token") as mock_verify,
+        patch("app.middleware.auth_middleware.get_db", return_value=mock_db),
+    ):
+        mock_verify.return_value = _mock_payload()
+        yield mock_verify
 
 
 class TestListExpenses:

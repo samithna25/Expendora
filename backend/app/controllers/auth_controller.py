@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson import ObjectId
 from app.database.db import get_db
@@ -54,7 +55,12 @@ def register_user(data):
     result = db.users.insert_one(user_data)
     user_id = str(result.inserted_id)
 
-    token = generate_token(user_id, email)
+    session_result = db.sessions.insert_one({
+        "user_id": ObjectId(user_id),
+        "created_at": datetime.now(timezone.utc)
+    })
+    session_id = str(session_result.inserted_id)
+    token = generate_token(user_id, email, session_id=session_id)
 
     return jsonify({
         'status': 'success',
@@ -84,8 +90,18 @@ def login_user(data):
         user = db.users.find_one({'email': email})
         if user and check_password_hash(user['password'], password):
             user_id = str(user['_id'])
+
+            # Delete all existing sessions → only this device stays logged in
+            db.sessions.delete_many({"user_id": ObjectId(user_id)})
+
+            session_result = db.sessions.insert_one({
+                "user_id": ObjectId(user_id),
+                "created_at": datetime.now(timezone.utc)
+            })
+            session_id = str(session_result.inserted_id)
+
             name = user.get('name', '')
-            token = generate_token(user_id, email)
+            token = generate_token(user_id, email, session_id=session_id)
             return jsonify({
                 'status': 'success',
                 'message': 'Login successful',
@@ -109,6 +125,30 @@ def login_user(data):
             'status': 'error',
             'message': 'Database connection failed'
         }), 500
+
+
+def get_profile_data():
+    """GET /auth/profile — return the authenticated user's profile data."""
+    user_id = request.current_user["user_id"]
+    db = get_db()
+    if db is None:
+        return jsonify({'status': 'error', 'message': 'Database connection failed'}), 500
+
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        return jsonify({'status': 'error', 'message': 'User not found'}), 404
+
+    return jsonify({
+        'status': 'success',
+        'data': {
+            'user': {
+                'id': str(user['_id']),
+                'name': user.get('name', ''),
+                'email': user.get('email', ''),
+                'monthly_budget': user.get('monthly_budget'),
+            }
+        }
+    }), 200
 
 
 def update_profile(data):
@@ -145,4 +185,19 @@ def update_profile(data):
                 'monthly_budget': user.get('monthly_budget'),
             }
         }
+    }), 200
+
+
+def logout_user():
+    """POST /auth/logout — delete the current session document only."""
+    session_id = request.current_user["session_id"]
+    db = get_db()
+    if db is None:
+        return jsonify({'status': 'error', 'message': 'Database connection failed'}), 500
+
+    db.sessions.delete_one({"_id": ObjectId(session_id)})
+
+    return jsonify({
+        'status': 'success',
+        'message': 'Logged out successfully.'
     }), 200

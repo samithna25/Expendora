@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,12 +13,13 @@ import { SettingsScreen } from '../screens/Settings';
 import { BudgetPlannerScreen } from '../screens/BudgetPlanner';
 import { AddExpenseModal } from '../screens/AddExpenseModal';
 import { ONBOARDING_STORAGE_KEY } from '../utils/constants';
+import { SessionExpiredOverlay } from '../components/SessionExpiredOverlay';
 
 const Stack = createNativeStackNavigator();
 
 export function AppNavigator() {
   const { isDark } = useTheme();
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, sessionExpired, clearSessionExpired } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
   const [onboardingDone, setOnboardingDone] = useState(false);
 
@@ -41,7 +43,8 @@ export function AppNavigator() {
   }
 
   return (
-    <NavigationContainer
+    <View style={styles.root}>
+      <NavigationContainer
       theme={{
         ...DefaultTheme,
         dark: isDark,
@@ -81,5 +84,23 @@ export function AppNavigator() {
         )}
       </Stack.Navigator>
     </NavigationContainer>
+
+    <View
+      pointerEvents={sessionExpired ? 'auto' : 'none'}
+      style={styles.overlayContainer}
+    >
+      {sessionExpired && <SessionExpiredOverlay onLoginPress={clearSessionExpired} />}
+    </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  overlayContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 9999,
+  },
+});
