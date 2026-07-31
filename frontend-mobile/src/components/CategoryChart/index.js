@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Svg, { G, Path, Text as SvgText } from 'react-native-svg';
+import Svg, { Path, Text as SvgText } from 'react-native-svg';
 import { useTheme } from '../../context/ThemeContext';
 import { colors as themeColors } from '../../theme/colors';
 import { formatCurrency } from '../../utils/formatters';
+
+// ─── Geometry helpers ──────────────────────────────────────────────────────────
 
 function polarToCartesian(cx, cy, r, angleDeg) {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
@@ -13,81 +15,114 @@ function polarToCartesian(cx, cy, r, angleDeg) {
   };
 }
 
-function describeArc(cx, cy, r, startAngle, endAngle) {
-  const start = polarToCartesian(cx, cy, r, endAngle);
-  const end = polarToCartesian(cx, cy, r, startAngle);
-  const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+/**
+ * Builds an SVG path for a donut segment (annular arc).
+ * The segment spans from startAngle to endAngle (degrees, 0 = top).
+ * outerR = outer radius, innerR = inner (hole) radius.
+ */
+function donutSegmentPath(cx, cy, outerR, innerR, startAngle, endAngle) {
+  // Clamp to avoid degenerate paths
+  const sweep = Math.min(endAngle - startAngle, 359.9999);
+  const end = startAngle + sweep;
+  const largeArc = sweep > 180 ? 1 : 0;
+
+  const outerStart = polarToCartesian(cx, cy, outerR, startAngle);
+  const outerEnd   = polarToCartesian(cx, cy, outerR, end);
+  const innerStart = polarToCartesian(cx, cy, innerR, end);
+  const innerEnd   = polarToCartesian(cx, cy, innerR, startAngle);
+
   return [
-    `M ${cx} ${cy}`,
-    `L ${start.x} ${start.y}`,
-    `A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`,
+    `M ${outerStart.x} ${outerStart.y}`,
+    `A ${outerR} ${outerR} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
+    `L ${innerStart.x} ${innerStart.y}`,
+    `A ${innerR} ${innerR} 0 ${largeArc} 0 ${innerEnd.x} ${innerEnd.y}`,
     'Z',
   ].join(' ');
 }
 
-export function CategoryChart({ data, size = 140, innerRadius = 44 }) {
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export function CategoryChart({ data, size = 160, innerRadius = 50, budget }) {
   const { isDark } = useTheme();
   const colorScheme = isDark ? 'dark' : 'light';
+
   const total = data.reduce((s, d) => s + d.value, 0);
   const cx = size / 2;
   const cy = size / 2;
-  const outerR = size / 2 - 4;
+  const outerR = size / 2 - 6;
+  const innerR = innerRadius;
+
+  // Gap between segments (degrees)
+  const GAP = 2;
 
   let currentAngle = 0;
   const slices = data.map((d) => {
     const angle = (d.value / total) * 360;
-    const slice = {
-      path: describeArc(cx, cy, outerR, currentAngle, currentAngle + angle),
+    const startA = currentAngle + GAP / 2;
+    const endA   = currentAngle + angle - GAP / 2;
+    currentAngle += angle;
+    return {
+      path: donutSegmentPath(cx, cy, outerR, innerR, startA, endA),
       color: d.color,
       name: d.name,
       value: d.value,
+      pct: Math.round((d.value / total) * 100),
     };
-    currentAngle += angle;
-    return slice;
   });
+
+  // ── Center label ─────────────────────────────────────────────────────────
+  const centerLabel  = budget != null ? 'Budget' : 'Total';
+  const centerAmount = budget != null ? budget : total;
+  const centerColor  = themeColors.foreground[colorScheme];
+  const mutedColor   = themeColors.muted[colorScheme];
+  const bgColor      = isDark ? themeColors.background.dark : themeColors.background.light;
 
   return (
     <View style={styles.wrapper}>
+      {/* ── Donut Chart ── */}
       <View style={{ width: size, height: size }}>
         <Svg width={size} height={size}>
           {slices.map((s, i) => (
             <Path key={i} d={s.path} fill={s.color} />
           ))}
-          {/* inner circle for donut */}
-          <Path
-            d={describeArc(cx, cy, innerRadius, 0, 360)}
-            fill={isDark ? themeColors.background.dark : themeColors.background.light}
-          />
+
+          {/* Centre labels */}
           <SvgText
             x={cx}
-            y={cy - 6}
+            y={cy - 8}
             textAnchor="middle"
             fontSize={10}
-            fill={themeColors.muted[colorScheme]}
+            fontWeight="500"
+            fill={mutedColor}
           >
-            Total
+            {centerLabel}
           </SvgText>
           <SvgText
             x={cx}
-            y={cy + 12}
+            y={cy + 10}
             textAnchor="middle"
-            fontSize={16}
+            fontSize={13}
             fontWeight="bold"
-            fill={themeColors.foreground[colorScheme]}
+            fill={centerColor}
           >
-            {formatCurrency(total)}
+            {formatCurrency(centerAmount)}
           </SvgText>
         </Svg>
       </View>
+
+      {/* ── Legend ── */}
       <View style={styles.legend}>
-        {data.slice(0, 4).map((c) => (
+        {data.slice(0, 5).map((c, i) => (
           <View key={c.name} style={styles.legendItem}>
             <View style={[styles.dot, { backgroundColor: c.color }]} />
-            <Text style={[styles.legendName, { color: themeColors.muted[colorScheme] }]}>
+            <Text
+              style={[styles.legendName, { color: mutedColor }]}
+              numberOfLines={1}
+            >
               {c.name}
             </Text>
-            <Text style={[styles.legendValue, { color: themeColors.foreground[colorScheme] }]}>
-              {formatCurrency(c.value)}
+            <Text style={[styles.legendValue, { color: centerColor }]}>
+              {Math.round((c.value / total) * 100)}%
             </Text>
           </View>
         ))}

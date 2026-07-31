@@ -272,7 +272,7 @@ export function DashboardScreen({ navigation }) {
           {loading ? (
             <LoadingSpinner inline />
           ) : categoryBreakdown.length > 0 ? (
-            <CategoryChart data={categoryBreakdown} />
+            <CategoryChart data={categoryBreakdown} budget={monthlyLimit} />
           ) : (
             <Text style={[styles.emptyChart, { color: themeColors.muted[colorScheme] }]}>
               No spending data yet
