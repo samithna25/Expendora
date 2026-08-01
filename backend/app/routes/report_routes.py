@@ -6,6 +6,7 @@ from app.controllers.report_controller import (
     get_historical_trend,
     get_monthly_batch_data,
     download_monthly_pdf,
+    internal_download_monthly_pdf,
 )
 
 report_bp = Blueprint("reports", __name__, url_prefix="/reports")
@@ -33,6 +34,12 @@ def trend():
 @require_api_key
 def monthly_batch():
     return get_monthly_batch_data()
+
+
+@report_bp.route("/internal/pdf", methods=["GET"])
+@require_api_key
+def internal_generate_pdf():
+    return internal_download_monthly_pdf()
 
 
 @report_bp.route("/pdf", methods=["GET"])

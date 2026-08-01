@@ -20,7 +20,7 @@ import { colors as themeColors } from '../../theme/colors';
 import { CategoryChart } from '../../components/CategoryChart';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { borderRadius } from '../../theme/spacing';
-import { PERIOD_TABS, EXPENSE_CATEGORIES } from '../../utils/constants';
+import { PERIOD_TABS, EXPENSE_CATEGORIES, API_BASE_URL } from '../../utils/constants';
 import { formatCurrency } from '../../utils/formatters';
 import { useExpenses } from '../../context/ExpenseContext';
 import { expenseService } from '../../services/expenseService';
@@ -181,6 +181,26 @@ export function ReportsScreen() {
     }
   };
 
+  const [testingEmail, setTestingEmail] = useState(false);
+  const handleTestEmail = async () => {
+    try {
+      setTestingEmail(true);
+      // n8n is usually running on the same host but port 5678
+      // API_BASE_URL might be 'http://192.168.1.100:5000' -> 'http://192.168.1.100:5678'
+      const n8nUrl = API_BASE_URL.replace(/:\d+$/, '') + ':5678/webhook-test/trigger-monthly-reports';
+      
+      const response = await fetch(n8nUrl, { method: 'POST' });
+      if (!response.ok) {
+        throw new Error('Failed to trigger n8n webhook. Make sure you clicked "Listen for Test Event" in n8n.');
+      }
+      Alert.alert('Success', 'Email workflow triggered! Check your n8n dashboard and inbox.');
+    } catch (err) {
+      Alert.alert('Test Failed', err.message);
+    } finally {
+      setTestingEmail(false);
+    }
+  };
+
   const fetchTrend = useCallback(async () => {
     setTrendLoading(true);
     setTrendError(null);
@@ -257,16 +277,30 @@ export function ReportsScreen() {
               Live analytics
             </Text>
           </View>
-          <TouchableOpacity style={styles.pdfBtn} onPress={handleDownloadPdf} disabled={downloading}>
-            {downloading ? (
-              <ActivityIndicator size="small" color={themeColors.black} />
-            ) : (
-              <>
-                <Download size={14} color={themeColors.black} />
-                <Text style={styles.pdfText}>PDF</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row' }}>
+            <TouchableOpacity 
+              style={[styles.pdfBtn, { backgroundColor: '#e2e8f0', marginRight: 10 }]} 
+              onPress={handleTestEmail} 
+              disabled={testingEmail}
+            >
+              {testingEmail ? (
+                <ActivityIndicator size="small" color={themeColors.black} />
+              ) : (
+                <Text style={styles.pdfText}>Test Email</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.pdfBtn} onPress={handleDownloadPdf} disabled={downloading}>
+              {downloading ? (
+                <ActivityIndicator size="small" color={themeColors.black} />
+              ) : (
+                <>
+                  <Download size={14} color={themeColors.black} />
+                  <Text style={styles.pdfText}>PDF</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={[styles.tabRow, { backgroundColor: themeColors.secondary[colorScheme] }]}>

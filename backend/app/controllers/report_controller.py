@@ -114,11 +114,10 @@ def get_monthly_batch_data():
         db = get_db()
         users = list(db["users"].find({}))
         
-        # Calculate the previous month (YYYY-MM)
+        # For testing purposes, we'll use the CURRENT month so you can see your live data.
+        # (In production, this would be set to the previous month)
         now = datetime.now(timezone.utc)
-        first_day_this_month = now.replace(day=1)
-        last_month_date = first_day_this_month - timedelta(days=1)
-        target_month = last_month_date.strftime("%Y-%m")
+        target_month = now.strftime("%Y-%m")
         
         batch_data = []
         for u in users:
@@ -189,4 +188,50 @@ def download_monthly_pdf():
         return jsonify({
             "status": "error",
             "message": "Failed to generate PDF.",
+        }), 500
+
+def internal_download_monthly_pdf():
+    """
+    GET /reports/internal/pdf
+    Generates and returns a PDF of the monthly spending report for a given user.
+    Used by n8n. Protected by API key.
+    """
+    user_id = request.args.get("user_id")
+    month = request.args.get("month")
+    
+    if not user_id:
+        return jsonify({"status": "error", "message": "user_id is required"}), 400
+
+    try:
+        db = get_db()
+        from bson import ObjectId
+        user = db["users"].find_one({"_id": ObjectId(user_id)})
+        
+        if not user:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+            
+        user_name = user.get("name", "User")
+        budget = float(user.get("monthly_budget")) if user.get("monthly_budget") else None
+
+        # Get the same analytics data used for the dashboard
+        data = get_dashboard_analytics(user_id=user_id, month=month, total_monthly_limit=budget)
+        
+        # Generate the PDF
+        actual_month = data.get("month", "Unknown Month")
+        pdf_buffer = generate_monthly_pdf(user_name, actual_month, data)
+        
+        filename = f"Expendora_Report_{actual_month}.pdf"
+        
+        return send_file(
+            pdf_buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        logger.error("[internal_download_monthly_pdf] Exception: %s", e)
+        return jsonify({
+            "status": "error",
+            "message": "Failed to generate internal PDF.",
         }), 500
