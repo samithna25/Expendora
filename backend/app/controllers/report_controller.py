@@ -1,5 +1,8 @@
 import logging
-from flask import request, jsonify
+from datetime import datetime, timezone, timedelta
+from flask import request, jsonify, send_file
+from app.database.db import get_db
+from app.services.pdf_service import generate_monthly_pdf
 from app.services.analytics_service import (
     get_dashboard_analytics,
     get_historical_monthly_trend,
@@ -99,4 +102,91 @@ def get_historical_trend():
         return jsonify({
             "status": "error",
             "message": "Failed to fetch monthly trend data.",
+        }), 500
+
+def get_monthly_batch_data():
+    """
+    GET /internal/monthly-batch
+    Returns aggregated spending metrics for all users for the previous month.
+    Designed to be called by n8n scheduled workflow.
+    """
+    try:
+        db = get_db()
+        users = list(db["users"].find({}))
+        
+        # Calculate the previous month (YYYY-MM)
+        now = datetime.now(timezone.utc)
+        first_day_this_month = now.replace(day=1)
+        last_month_date = first_day_this_month - timedelta(days=1)
+        target_month = last_month_date.strftime("%Y-%m")
+        
+        batch_data = []
+        for u in users:
+            user_id = str(u["_id"])
+            budget = float(u.get("monthly_budget")) if u.get("monthly_budget") else None
+            try:
+                data = get_dashboard_analytics(user_id=user_id, month=target_month, total_monthly_limit=budget)
+                batch_data.append({
+                    "user_id": user_id,
+                    "name": u.get("name", "User"),
+                    "email": u.get("email"),
+                    "month": target_month,
+                    "monthly_total": data.get("monthly_total", 0),
+                    "top_category": data.get("top_category"),
+                    "budget_status": data.get("budget_status"),
+                    "insights": data.get("insights")
+                })
+            except Exception as e:
+                logger.error(f"[get_monthly_batch_data] Error processing user {user_id}: {e}")
+                
+        return jsonify({
+            "status": "success",
+            "target_month": target_month,
+            "data": batch_data
+        }), 200
+        
+    except Exception as e:
+        logger.error("[get_monthly_batch_data] Exception: %s", e)
+        return jsonify({
+            "status": "error",
+            "message": "Failed to generate monthly batch data.",
+        }), 500
+
+def download_monthly_pdf():
+    """
+    GET /reports/pdf
+    Generates and returns a PDF of the monthly spending report.
+    """
+    user_id = _get_user_id()
+    month = request.args.get("month")
+    budget = request.args.get("budget", type=float)
+
+    try:
+        # Get the same analytics data used for the dashboard
+        data = get_dashboard_analytics(user_id=user_id, month=month, total_monthly_limit=budget)
+        
+        # We also need the user's name
+        db = get_db()
+        from bson import ObjectId
+        user = db["users"].find_one({"_id": ObjectId(user_id)})
+        user_name = user.get("name", "User") if user else "User"
+        
+        # Generate the PDF
+        actual_month = data.get("month", "Unknown Month")
+        pdf_buffer = generate_monthly_pdf(user_name, actual_month, data)
+        
+        filename = f"Expendora_Report_{actual_month}.pdf"
+        
+        return send_file(
+            pdf_buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        logger.error("[download_monthly_pdf] Exception: %s", e)
+        return jsonify({
+            "status": "error",
+            "message": "Failed to generate PDF.",
         }), 500

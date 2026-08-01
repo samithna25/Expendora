@@ -1,4 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
+import { API_BASE_URL, AUTH_TOKEN_KEY } from '../utils/constants';
 
 export const reportService = {
   /**
@@ -30,7 +32,16 @@ export const reportService = {
     return api.get(`/reports/monthly-trend?period=${period}`);
   },
 
-  async downloadPdf(reportId) {
-    return api.get(`/reports/${reportId}/pdf`);
+  async downloadPdf(month) {
+    const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+    const query = month ? `?month=${month}` : '';
+    const uri = `${API_BASE_URL}/reports/pdf${query}`;
+    
+    return {
+      uri,
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    };
   },
 };

@@ -7,7 +7,11 @@ import {
   Dimensions,
   StyleSheet,
   RefreshControl,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import { Download, TrendingDown, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react-native';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,6 +24,7 @@ import { PERIOD_TABS, EXPENSE_CATEGORIES } from '../../utils/constants';
 import { formatCurrency } from '../../utils/formatters';
 import { useExpenses } from '../../context/ExpenseContext';
 import { expenseService } from '../../services/expenseService';
+import { reportService } from '../../services/reportService';
 
 // ─── Chart dimensions ─────────────────────────────────────────────────────────
 const { width: screenWidth } = Dimensions.get('window');
@@ -138,6 +143,43 @@ export function ReportsScreen() {
   const [trendLoading, setTrendLoading] = useState(true);
   const [trendError, setTrendError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloading(true);
+      const d = new Date();
+      let monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      
+      // If there are expenses in the context, find the most recent one to determine the month
+      // This prevents empty PDFs if the user is viewing historical data (e.g. from 05/24)
+      if (expenses && expenses.length > 0) {
+        const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+        if (sorted[0].date) {
+          monthStr = sorted[0].date.substring(0, 7);
+        }
+      }
+      
+      const { uri, headers } = await reportService.downloadPdf(monthStr);
+      
+      const fileUri = `${FileSystem.documentDirectory}Expendora_Report_${monthStr}.pdf`;
+      const downloadRes = await FileSystem.downloadAsync(uri, fileUri, { headers });
+      
+      if (downloadRes.status !== 200) {
+        throw new Error('Failed to download PDF from server.');
+      }
+      
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(downloadRes.uri);
+      } else {
+        Alert.alert('Downloaded', `File saved to ${downloadRes.uri}`);
+      }
+    } catch (err) {
+      Alert.alert('Download Error', err.message);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const fetchTrend = useCallback(async () => {
     setTrendLoading(true);
@@ -215,9 +257,15 @@ export function ReportsScreen() {
               Live analytics
             </Text>
           </View>
-          <TouchableOpacity style={styles.pdfBtn}>
-            <Download size={14} color={themeColors.black} />
-            <Text style={styles.pdfText}>PDF</Text>
+          <TouchableOpacity style={styles.pdfBtn} onPress={handleDownloadPdf} disabled={downloading}>
+            {downloading ? (
+              <ActivityIndicator size="small" color={themeColors.black} />
+            ) : (
+              <>
+                <Download size={14} color={themeColors.black} />
+                <Text style={styles.pdfText}>PDF</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
 
