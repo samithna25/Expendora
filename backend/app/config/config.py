@@ -13,3 +13,7 @@ class Config:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
     OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+
+    N8N_WEBHOOK_PASSWORD_RESET = os.getenv("N8N_WEBHOOK_PASSWORD_RESET")
+    FRONTEND_URL = os.getenv("FRONTEND_URL", "expendora://")
+    BACKEND_PUBLIC_URL = os.getenv("BACKEND_PUBLIC_URL")

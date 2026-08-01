@@ -1,0 +1,6 @@
+{
+  "email": "samith@example.com",
+  "reset_token": "abc123resettoken_example_only",
+  "expires_at": "2026-07-31T15:30:00.000Z",
+  "user_name": "Samith"
+}
