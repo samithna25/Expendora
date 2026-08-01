@@ -166,7 +166,7 @@ def get_historical_monthly_trend(user_id: str, limit: int = 6) -> list:
 def calculate_budget_alerts(monthly_total: float, category_breakdown: list, custom_limits: dict = None) -> tuple:
     """
     Calculates overall and per-category budget status and generates overspending alerts.
-    - WARNING: spending >= 80% of budget threshold
+    - WARNING: spending >= 75% of budget threshold
     - EXCEEDED: spending >= 100% of budget threshold
     """
     limits = {**DEFAULT_BUDGET_LIMITS, **(custom_limits or {})}
@@ -186,7 +186,7 @@ def calculate_budget_alerts(monthly_total: float, category_breakdown: list, cust
             "percentage": total_pct,
             "message": f"Overall monthly budget exceeded! Spent {total_pct}% of threshold ({monthly_total:.2f} / {total_limit:.2f}).",
         })
-    elif monthly_total >= (total_limit * 0.8):
+    elif monthly_total >= (total_limit * 0.75):
         alerts.append({
             "type": "OVERALL_WARNING",
             "level": "WARNING",
@@ -217,7 +217,7 @@ def calculate_budget_alerts(monthly_total: float, category_breakdown: list, cust
                 "percentage": pct,
                 "message": f"{cat_name} budget exceeded! Spent {pct}% of limit.",
             })
-        elif spent >= (cat_limit * 0.8):
+        elif spent >= (cat_limit * 0.75):
             alerts.append({
                 "type": "CATEGORY_WARNING",
                 "level": "WARNING",

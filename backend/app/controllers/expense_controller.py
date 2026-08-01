@@ -140,6 +140,36 @@ def create_expense_route():
 
     expense_doc["_id"] = ObjectId(expense_id)
 
+    try:
+        from app.database.db import get_db
+        from app.services.analytics_service import get_dashboard_analytics
+        from app.services.n8n_service import trigger_budget_alert_webhook
+        from datetime import datetime
+
+        db = get_db()
+        if db is not None:
+            user = db["users"].find_one({"_id": ObjectId(user_id)})
+            if user and user.get("email"):
+                current_month = datetime.utcnow().strftime("%Y-%m")
+                analytics = get_dashboard_analytics(user_id, current_month)
+                budget_status = analytics.get("budget_status", {})
+                limit = budget_status.get("monthly_limit") or analytics.get("monthly_total", 0)
+                spent = budget_status.get("monthly_spent", analytics.get("monthly_total", 0))
+                percentage = budget_status.get("percentage_used")
+                if percentage is None and limit > 0:
+                    percentage = round((spent / limit) * 100, 1)
+
+                if limit > 0 and percentage is not None and percentage >= 75:
+                    trigger_budget_alert_webhook(
+                        user_id=user_id,
+                        email=user["email"],
+                        budget=limit,
+                        spent=spent,
+                        percentage=percentage,
+                    )
+    except Exception as e:
+        print(f"Error triggering budget alert: {e}")
+
     return jsonify({
         "status": "success",
         "message": "Expense created successfully.",

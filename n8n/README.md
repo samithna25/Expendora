@@ -13,7 +13,7 @@ Flask handles business logic (auth, OCR, budgets). n8n handles **background task
 | `01-welcome-email/` | Welcome email on registration | Webhook `POST /webhook/welcome-email` |
 | `02-forgot-password/` | Password reset email | Webhook `POST /webhook/password-reset` |
 | `03-monthly-report/` | Monthly summary email | Schedule (cron) |
-| `04-budget-alert/` | Budget 80% / 100% alerts | Webhook |
+| `04-budget-alert/` | Budget 75% alerts | Webhook |
 
 Each folder contains:
 
@@ -85,7 +85,7 @@ Most Expendora email workflows follow this structure:
 |----------|----------|
 | `N8N_WEBHOOK_WELCOME` | Welcome email |
 | `N8N_WEBHOOK_PASSWORD_RESET` | Forgot password |
-| `N8N_WEBHOOK_BUDGET_ALERT` | Budget 80% warning |
+| `N8N_WEBHOOK_BUDGET_ALERT` | Budget 75% warning |
 | `N8N_WEBHOOK_BUDGET_EXCEEDED` | Budget exceeded |
 | `FRONTEND_URL` | Deep link base for reset emails (`expendora://`) |
 
@@ -153,7 +153,7 @@ n8n/
 | 01 | Welcome Email | `POST /auth/register` → Webhook | Personalise greeting | Welcome HTML email | Log to MongoDB |
 | 02 | Forgot Password | `POST /auth/forgot-password` → Webhook | None (deterministic) | Reset link email | Log to MongoDB |
 | 03 | Monthly Report | Cron (1st of month) + Webhook | Analyse spending data | Report email | Log to MongoDB |
-| 04 | Budget Alert | `POST /expenses` overage → Webhook | Generate advice | Alert email | Log to MongoDB |
+| 04 | Budget Alert | `POST /expenses` overage → Webhook | Manual HTML Template | Alert email | Log to MongoDB |
 
 ---
 

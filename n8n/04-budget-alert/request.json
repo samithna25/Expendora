@@ -1,0 +1,7 @@
+{
+  "userId": "usr_123abc",
+  "email": "user@example.com",
+  "budget": 1000,
+  "spent": 800,
+  "percentage": 80
+}

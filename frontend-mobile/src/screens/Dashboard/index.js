@@ -94,7 +94,7 @@ export function DashboardScreen({ navigation }) {
 
   useEffect(() => {
     fetchDashboard();
-  }, [fetchDashboard]);
+  }, [budgetLoaded, fetchDashboard, expenses.length, totalSpent]);
 
   // ─── Derived values (user budget > backend > fallback) ──────────────────
   const monthlyLimit = userBudget ?? dashboardData?.budget_status?.monthly_limit ?? FALLBACK_BUDGET;
