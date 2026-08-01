@@ -11,6 +11,7 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "scheme": "expendora",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.expendora.mobile"
@@ -19,7 +20,19 @@
       "adaptiveIcon": {
         "backgroundColor": "#0A0A0F"
       },
-      "package": "com.expendora.mobile"
+      "package": "com.expendora.mobile",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "expendora"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
       "expo-font",

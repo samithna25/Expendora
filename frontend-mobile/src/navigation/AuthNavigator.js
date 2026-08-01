@@ -4,14 +4,18 @@ import { useAuth } from '../context/AuthContext';
 import { OnboardingScreen } from '../screens/Onboarding';
 import { LoginScreen } from '../screens/Login';
 import { RegisterScreen } from '../screens/Register';
+import { ResetPasswordScreen } from '../screens/ResetPassword';
 
 const Stack = createNativeStackNavigator();
 
-export function AuthNavigator({ onOnboardingDone }) {
+export function AuthNavigator({ onOnboardingDone, initialRouteName = 'Onboarding' }) {
   const { login, register } = useAuth();
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack.Navigator
+      initialRouteName={initialRouteName}
+      screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
+    >
       <Stack.Screen name="Onboarding">
         {(props) => (
           <OnboardingScreen
@@ -41,6 +45,7 @@ export function AuthNavigator({ onOnboardingDone }) {
           />
         )}
       </Stack.Screen>
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
     </Stack.Navigator>
   );
 }
