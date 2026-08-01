@@ -22,7 +22,7 @@ def trigger_welcome_email(user_id, name, email):
     """Fire-and-forget: POST to n8n welcome email webhook in a background thread."""
     def _send():
         try:
-            webhook_url = os.getenv('N8N_WEBHOOK_URL', 'http://localhost:5678/webhook/expendora-welcome')
+            webhook_url = os.getenv('N8N_WEBHOOK_WELCOME', 'http://localhost:5678/webhook/expendora-welcome')
             payload = {
                 'userId': user_id,
                 'name': name,
