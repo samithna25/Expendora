@@ -1,0 +1,249 @@
+{
+  "name": "Expendora – 01 Welcome Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "expendora-welcome",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567801",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "expendora-welcome-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1a2b3c4-d5e6-7890-abcd-ef1234567811",
+              "name": "userName",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "f1a2b3c4-d5e6-7890-abcd-ef1234567812",
+              "name": "userEmail",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "f1a2b3c4-d5e6-7890-abcd-ef1234567813",
+              "name": "userId",
+              "value": "={{ $json.body.userId }}",
+              "type": "string"
+            },
+            {
+              "id": "f1a2b3c4-d5e6-7890-abcd-ef1234567814",
+              "name": "registeredAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567802",
+      "name": "Prepare User Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are Expendora's friendly AI assistant. A new user just signed up!\n\nUser Name: {{ $json.userName }}\nRegistered At: {{ $json.registeredAt }}\n\nWrite a warm, personalised welcome email body in HTML for this user. The email must:\n1. Greet them by name\n2. Welcome them to Expendora – a smart expense tracking app\n3. Highlight these 3 features in a short bullet list:\n   - Track expenses by category with receipts\n   - Set a monthly budget and get alerts when close to the limit\n   - Get AI-powered monthly spending insights and reports\n4. Give one simple tip to get started (e.g. add their first expense)\n5. Keep the tone friendly, encouraging, and professional\n\nReturn ONLY the inner HTML body content – no <html>, <head>, or <body> wrapper tags. Use inline CSS styles only.",
+        "options": {
+          "systemMessage": "You are Expendora's email copywriter. Always respond with clean, valid HTML suitable for email clients. Use only inline styles. Keep the email concise, under 300 words. Never include markdown formatting."
+        }
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567803",
+      "name": "AI Agent – Personalise Welcome",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o-mini",
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 600
+        }
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567804",
+      "name": "OpenRouter Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmOpenAi",
+      "typeVersion": 1.2,
+      "position": [680, 500],
+      "credentials": {
+        "openAiApi": {
+          "id": "openrouter-credential",
+          "name": "OpenRouter API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1a2b3c4-d5e6-7890-abcd-ef1234567821",
+              "name": "emailBody",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567805",
+      "name": "Extract AI Email Body",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "expendora.app@gmail.com",
+        "toEmail": "={{ $('Prepare User Data').item.json.userEmail }}",
+        "subject": "=Welcome to Expendora, {{ $('Prepare User Data').item.json.userName }}! 🎉",
+        "emailType": "html",
+        "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <title>Welcome to Expendora</title>\n</head>\n<body style=\"margin:0;padding:0;background-color:#f4f6f9;font-family:'Segoe UI',Helvetica,Arial,sans-serif;\">\n\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#f4f6f9;padding:40px 0;\">\n    <tr>\n      <td align=\"center\">\n        <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);\">\n\n          <!-- Header -->\n          <tr>\n            <td style=\"background:linear-gradient(135deg,#FF6B35 0%,#FF8C42 100%);padding:40px;text-align:center;\">\n              <h1 style=\"color:#ffffff;margin:0;font-size:32px;font-weight:700;letter-spacing:-0.5px;\">💰 Expendora</h1>\n              <p style=\"color:rgba(255,255,255,0.9);margin:8px 0 0;font-size:16px;font-weight:400;\">Smart Expense Management</p>\n            </td>\n          </tr>\n\n          <!-- AI-generated body -->\n          <tr>\n            <td style=\"padding:40px;color:#333333;font-size:15px;line-height:1.7;\">\n              {{ $json.emailBody }}\n            </td>\n          </tr>\n\n          <!-- CTA Button -->\n          <tr>\n            <td style=\"padding:0 40px 40px;text-align:center;\">\n              <a href=\"expendora://home\" style=\"display:inline-block;background:linear-gradient(135deg,#FF6B35,#FF8C42);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:50px;font-size:16px;font-weight:600;letter-spacing:0.3px;\">Open Expendora →</a>\n            </td>\n          </tr>\n\n          <!-- Footer -->\n          <tr>\n            <td style=\"background-color:#f8f9fa;padding:24px 40px;border-top:1px solid #e9ecef;text-align:center;\">\n              <p style=\"margin:0;font-size:12px;color:#6c757d;\">© 2024 Expendora &nbsp;·&nbsp; <a href=\"#\" style=\"color:#FF6B35;text-decoration:none;\">Unsubscribe</a> &nbsp;·&nbsp; <a href=\"#\" style=\"color:#FF6B35;text-decoration:none;\">Privacy Policy</a></p>\n            </td>\n          </tr>\n\n        </table>\n      </td>\n    </tr>\n  </table>\n\n</body>\n</html>",
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567806",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1120, 300],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credential",
+          "name": "Expendora SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "n8n_email_logs",
+        "fields": "={\n  \"workflow\": \"01-welcome-email\",\n  \"userId\": \"{{ $('Prepare User Data').item.json.userId }}\",\n  \"userEmail\": \"{{ $('Prepare User Data').item.json.userEmail }}\",\n  \"userName\": \"{{ $('Prepare User Data').item.json.userName }}\",\n  \"registeredAt\": \"{{ $('Prepare User Data').item.json.registeredAt }}\",\n  \"emailSentAt\": \"{{ $now.toISO() }}\",\n  \"status\": \"sent\",\n  \"trigger\": \"user-registration\"\n}"
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567807",
+      "name": "Log to MongoDB",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [1340, 200],
+      "credentials": {
+        "mongoDb": {
+          "id": "mongodb-credential",
+          "name": "Expendora MongoDB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Welcome email dispatched\",\n  \"userId\": \"{{ $('Prepare User Data').item.json.userId }}\"\n}"
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567808",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1340, 420]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prepare User Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare User Data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent – Personalise Welcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent – Personalise Welcome",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent – Personalise Welcome": {
+      "main": [
+        [
+          {
+            "node": "Extract AI Email Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract AI Email Body": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome Email": {
+      "main": [
+        [
+          {
+            "node": "Log to MongoDB",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "expendora" },
+    { "name": "welcome-email" },
+    { "name": "ai" }
+  ],
+  "triggerCount": 1,
+  "versionId": "expendora-welcome-v1"
+}
