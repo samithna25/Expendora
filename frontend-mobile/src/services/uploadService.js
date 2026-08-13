@@ -23,8 +23,8 @@ export const uploadService = {
     });
 
     const controller = new AbortController();
-    // OCR + Cloudinary can take up to ~40s — give it 60s before timing out
-    const timeout = setTimeout(() => controller.abort(), 60000);
+    // OCR + Cloudinary can take a while — give it 120s before timing out
+    const timeout = setTimeout(() => controller.abort(), 120000);
 
     try {
       const response = await fetch(`${API_BASE_URL}/receipts/upload`, {

@@ -97,22 +97,23 @@ def _correct_skew(img: Image.Image) -> Image.Image:
 def _detect_skew_angle(img: Image.Image) -> float | None:
     try:
         thumb = img.copy()
-        thumb.thumbnail((800, 800), Image.LANCZOS)
+        thumb.thumbnail((400, 400), Image.LANCZOS)
 
         best_angle    = 0.0
         best_variance = -1.0
 
         angle = -MAX_SKEW_DEGREES
         while angle <= MAX_SKEW_DEGREES:
-            rotated = thumb.rotate(angle, resample=Image.BICUBIC, expand=False, fillcolor=255)
+            rotated = thumb.rotate(angle, resample=Image.NEAREST, expand=False, fillcolor=255)
             width, height = rotated.size
-            pixels = rotated.load()
+            
+            # Fast row average using Pillow's C-optimized resize
+            row_avg_img = rotated.resize((1, height), resample=Image.BOX)
+            row_averages = list(row_avg_img.getdata())
 
-            row_sums = [sum(pixels[x, y] for x in range(width)) for y in range(height)]
-
-            n    = len(row_sums)
-            mean = sum(row_sums) / n
-            variance = sum((s - mean) ** 2 for s in row_sums) / n
+            n = height
+            mean = sum(row_averages) / n
+            variance = sum((s - mean) ** 2 for s in row_averages) / n
 
             if variance > best_variance:
                 best_variance = variance

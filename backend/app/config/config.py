@@ -11,6 +11,7 @@ class Config:
     CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    OPENAI_VISION_MODEL = os.getenv("OPENAI_VISION_MODEL", "gpt-4o")
     OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
     OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
 

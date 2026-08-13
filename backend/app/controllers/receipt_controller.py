@@ -49,8 +49,8 @@ def upload_receipt():
     parsed = {"merchant_name": None, "amount": None, "currency": "MYR", "date": None}
 
     if ocr_result.get("success"):
-        raw_text = ocr_result["raw_text"]
-        parsed = parse_receipt_text(raw_text)
+        raw_text = ocr_result.get("raw_text")
+        parsed = ocr_result.get("parsed") or parse_receipt_text(raw_text or "")
         logger.info(
             "[upload_receipt] Parsed: merchant='%s', amount=%s, date='%s'",
             parsed["merchant_name"], parsed["amount"], parsed["date"]
