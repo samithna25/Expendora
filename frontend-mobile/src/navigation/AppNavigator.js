@@ -12,6 +12,7 @@ import { TabNavigator } from './TabNavigator';
 import { UploadReceiptScreen } from '../screens/UploadReceipt';
 import { SettingsScreen } from '../screens/Settings';
 import { BudgetPlannerScreen } from '../screens/BudgetPlanner';
+import { LegalScreen } from '../screens/Legal';
 import { AddExpenseModal } from '../screens/AddExpenseModal';
 import { ONBOARDING_STORAGE_KEY } from '../utils/constants';
 import { SessionExpiredOverlay } from '../components/SessionExpiredOverlay';
@@ -123,6 +124,7 @@ export function AppNavigator() {
               />
               <Stack.Screen name="Settings" component={SettingsScreen} />
               <Stack.Screen name="BudgetPlanner" component={BudgetPlannerScreen} />
+              <Stack.Screen name="Legal" component={LegalScreen} />
             </>
           )}
         </Stack.Navigator>
