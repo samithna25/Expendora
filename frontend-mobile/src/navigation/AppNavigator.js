@@ -91,10 +91,10 @@ export function AppNavigator() {
           dark: isDark,
           colors: {
             primary: '#FACC15',
-            background: isDark ? '#0A0A0F' : '#FFFFFF',
-            card: isDark ? '#1A1A2E' : '#F5F5F5',
-            text: isDark ? '#FFFFFF' : '#1A1A2E',
-            border: isDark ? '#2A2A3E' : '#E2E8F0',
+            background: isDark ? '#080808' : '#F7F3ED',
+            card:       isDark ? '#111111' : '#FFFFFF',
+            text:       isDark ? '#F5E6C8' : '#1C1208',
+            border:     isDark ? '#2A2210' : '#DDD0BB',
             notification: '#FACC15',
           },
         }}

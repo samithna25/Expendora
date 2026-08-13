@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Bell, ChevronRight, LogOut, Star, FileText, ShieldCheck, Info, Settings } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
@@ -7,13 +7,15 @@ import { useNavigation } from '@react-navigation/native';
 import { colors as themeColors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSettings } from '../../context/SettingsContext';
 
 export function ProfileScreen() {
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark } = useTheme();
   const { user, logout } = useAuth();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const colorScheme = isDark ? 'dark' : 'light';
+  const { fontSizeScale } = useSettings();
 
   return (
     <ScrollView
@@ -32,22 +34,16 @@ export function ProfileScreen() {
             </View>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={[styles.name, { color: themeColors.white }]}>
+            <Text style={[styles.name, { color: themeColors.white, fontSize: 16 * fontSizeScale }]}>
               {user?.name}
             </Text>
-            <Text style={[styles.email, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }]}>
+            <Text style={[styles.email, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)', fontSize: 12 * fontSizeScale }]}>
               {user?.email}
             </Text>
             <View style={styles.proBadge}>
               <Text style={styles.proBadgeText}>PRO MEMBER</Text>
             </View>
           </View>
-        </View>
-
-        <View style={[styles.statsRow, { borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)' }]}>
-          <Stat label="Receipts" value="142" isDark={isDark} />
-          <Stat label="Saved" value="$612" gold isDark={isDark} />
-          <Stat label="Streak" value="28d" isDark={isDark} />
         </View>
       </View>
 
@@ -66,15 +62,6 @@ export function ProfileScreen() {
             PREFERENCES
           </Text>
           <View style={[styles.menuGroup, { backgroundColor: themeColors.card[isDark ? 'dark' : 'light'] }]}>
-            <View style={[styles.themeRow, { borderBottomWidth: 1, borderBottomColor: themeColors.border[isDark ? 'dark' : 'light'] }]}>
-              <Text style={[styles.themeLabel, { color: themeColors.foreground[isDark ? 'dark' : 'light'] }]}>Dark Mode</Text>
-              <Switch
-                value={isDark}
-                onValueChange={toggleTheme}
-                trackColor={{ false: '#E2E8F0', true: themeColors.gold }}
-                thumbColor={isDark ? themeColors.black : '#fff'}
-              />
-            </View>
             <Row
               Icon={Settings}
               label="Settings"
@@ -117,21 +104,8 @@ export function ProfileScreen() {
   );
 }
 
-function Stat({ label, value, gold, isDark }) {
-  return (
-    <View style={styles.statItem}>
-      <Text
-        style={[
-          styles.statValue,
-          { color: gold ? themeColors.gold : isDark ? themeColors.white : themeColors.foreground.light },
-        ]}
-      >
-        {value}
-      </Text>
-      <Text style={[styles.statLabel, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }]}>{label}</Text>
-    </View>
-  );
-}
+
+
 
 function Row({ Icon, label, right, isDark, onPress }) {
   return (

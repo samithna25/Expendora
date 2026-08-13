@@ -39,13 +39,31 @@ KEYWORD_MAP = {
         "cinema", "movie", "theatre", "theater", "netflix", "spotify",
         "steam", "game", "playstation", "xbox", "ticket", "tgv", "gsc",
     ],
-    "Healthcare": [
+    "Health": [
         "hospital", "clinic", "pharmacy", "doctor", "dental", "medical",
-        "health", "medicare",
+        "health", "medicare", "medicine", "pill",
     ],
     "Education": [
         "university", "college", "school", "tuition", "academy",
-        "institute", "coursera", "udemy",
+        "institute", "coursera", "udemy", "book", "stationery",
+    ],
+    "Phone": [
+        "phone", "mobile", "dialog", "mobitel", "airtel", "hutch", "reload", "topup",
+    ],
+    "Beauty": [
+        "beauty", "salon", "spa", "cosmetics", "makeup", "hair", "nail", "perfume", "skincare",
+    ],
+    "Sports": [
+        "sport", "gym", "fitness", "decathlon", "nike", "adidas", "puma", "under armour",
+    ],
+    "Travel": [
+        "travel", "hotel", "resort", "flight", "airbnb", "agoda", "booking", "holiday", "vacation",
+    ],
+    "Pets": [
+        "pet", "dog", "cat", "vet", "veterinary", "animal", "whiskas", "pedigree",
+    ],
+    "Donations": [
+        "donation", "charity", "fund", "donate", "temple", "church", "mosque", "orphanage",
     ],
 }
 
@@ -77,12 +95,17 @@ CATEGORY_NORMALISE = {
     "bills": "Bills",
     "utilities": "Bills",
     "entertainment": "Entertainment",
-    "healthcare": "Other",
-    "health": "Other",
-    "education": "Other",
+    "healthcare": "Health",
+    "health": "Health",
+    "education": "Education",
+    "phone": "Phone",
+    "beauty": "Beauty",
+    "sports": "Sports",
+    "travel": "Travel",
+    "pets": "Pets",
+    "donations": "Donations",
     "banking": "Other",
-    "travel": "Transport",
-    "personal care": "Other",
+    "personal care": "Beauty",
     "income": "Other",
     "uncategorized": "Other",
     # Direct matches (already correct)

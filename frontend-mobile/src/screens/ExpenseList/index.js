@@ -15,7 +15,8 @@ import { colors as themeColors } from '../../theme/colors';
 import { ExpenseCard } from '../../components/ExpenseCard';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { borderRadius } from '../../theme/spacing';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import { formatDate } from '../../utils/formatters';
+import { useSettings } from '../../context/SettingsContext';
 import { EXPENSE_CATEGORIES } from '../../utils/constants';
 import { expenseService } from '../../services/expenseService';
 import { useExpenses } from '../../context/ExpenseContext';
@@ -37,6 +38,7 @@ export function ExpenseListScreen({ navigation }) {
   const colorScheme = isDark ? 'dark' : 'light';
 
   const { expenses, loading, error, refresh, removeExpense } = useExpenses();
+  const { formatAmount } = useSettings();
 
   const [query, setQuery] = useState('');
   const [selectedCat, setSelectedCat] = useState('all');
@@ -79,7 +81,7 @@ export function ExpenseListScreen({ navigation }) {
     (expense) => {
       Alert.alert(
         'Delete Expense',
-        `Remove "${expense.merchant}" (${formatCurrency(expense.amount)})?`,
+        `Remove "${expense.merchant}" (${formatAmount(expense.amount)})?`,
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -138,7 +140,7 @@ export function ExpenseListScreen({ navigation }) {
             <Text style={[styles.subtitle, { color: themeColors.muted[colorScheme] }]}>
               {filtered.length} transactions ·{' '}
               <Text style={[styles.subtitleBold, { color: themeColors.foreground[colorScheme] }]}>
-                {formatCurrency(total)}
+                {formatAmount(total)}
               </Text>
             </Text>
           </View>
@@ -172,7 +174,7 @@ export function ExpenseListScreen({ navigation }) {
         {/* Category chips */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips}>
           <Chip active={selectedCat === 'all'} onPress={() => setSelectedCat('all')} label="All" isDark={isDark} />
-          {EXPENSE_CATEGORIES.slice(0, 6).map((c) => (
+          {EXPENSE_CATEGORIES.map((c) => (
             <Chip
               key={c.id}
               active={selectedCat === c.id}

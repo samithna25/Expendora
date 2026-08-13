@@ -5,8 +5,9 @@ logger = logging.getLogger(__name__)
 
 VALID_CATEGORIES = {
     "Food & Dining", "Transport", "Grocery", "Shopping", "Bills & Utilities",
-    "Entertainment", "Healthcare", "Education", "Income",
-    "Banking", "Travel", "Online Shopping", "Personal Care",
+    "Entertainment", "Health", "Education", "Income",
+    "Banking", "Travel", "Online Shopping", "Beauty", "Phone",
+    "Sports", "Pets", "Donations",
 }
 
 CATEGORY_LIST = ", ".join(sorted(VALID_CATEGORIES))

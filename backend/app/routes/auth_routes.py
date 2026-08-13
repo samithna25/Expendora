@@ -8,6 +8,7 @@ from app.controllers.auth_controller import (
     logout_user,
     forgot_password,
     reset_password,
+    change_password,
 )
 from app.middleware.auth_middleware import require_auth
 from datetime import datetime
@@ -50,6 +51,12 @@ def forgot_password_route():
 def reset_password_route():
     data = request.get_json()
     return reset_password(data)
+
+@auth_bp.route('/change-password', methods=['PUT'])
+@require_auth
+def change_password_route():
+    data = request.get_json()
+    return change_password(data)
 
 @auth_bp.route('/reset-redirect', methods=['GET'])
 def reset_redirect():

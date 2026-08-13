@@ -5,40 +5,40 @@ export const colors = {
   goldLight: '#FDE68A',    // soft champagne highlight
   goldDeep:  '#B8860B',    // dark goldenrod — mid-tier gold
 
-  // ── Backgrounds (both modes are dark/luxury) ───────────────────────────────
+  // ── Backgrounds ───────────────────────────────────────────────────────────
   background: {
-    light: '#0D0D0D',      // near-black canvas
-    dark:  '#080808',      // true deep black
+    dark:  '#080808',      // true deep black (dark mode)
+    light: '#F7F3ED',      // warm cream / off-white (light mode)
   },
 
   // ── Card surfaces ──────────────────────────────────────────────────────────
   card: {
-    light: '#161616',      // lifted black card
-    dark:  '#111111',      // slightly lighter card
+    dark:  '#111111',      // lifted dark card
+    light: '#FFFFFF',      // pure white card
   },
 
   // ── Secondary / action backgrounds ────────────────────────────────────────
   secondary: {
-    light: '#1C1C1C',
     dark:  '#1A1A1A',
+    light: '#EDE7DC',      // warm sand
   },
 
   // ── Foreground / text ──────────────────────────────────────────────────────
   foreground: {
-    light: '#F5E6C8',      // warm champagne — primary text
-    dark:  '#F5E6C8',
+    dark:  '#F5E6C8',      // warm champagne — primary text on dark
+    light: '#1C1208',      // near-black warm — primary text on light
   },
 
   // ── Muted / secondary text ─────────────────────────────────────────────────
   muted: {
-    light: '#8A7A5A',      // warm aged-gold muted
-    dark:  '#6B5E45',
+    dark:  '#6B5E45',      // aged-gold muted on dark
+    light: '#8A7055',      // warm brown muted on light
   },
 
   // ── Borders ────────────────────────────────────────────────────────────────
   border: {
-    light: '#2C2208',      // dark gold-tinted border
-    dark:  '#2A2210',
+    dark:  '#2A2210',      // dark gold-tinted border
+    light: '#DDD0BB',      // warm light border
   },
 
   // ── Semantic ───────────────────────────────────────────────────────────────

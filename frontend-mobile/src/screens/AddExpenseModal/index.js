@@ -26,6 +26,7 @@ import { borderRadius } from '../../theme/spacing';
 import { EXPENSE_CATEGORIES } from '../../utils/constants';
 import { expenseService } from '../../services/expenseService';
 import { useExpenses } from '../../context/ExpenseContext';
+import { useSettings } from '../../context/SettingsContext';
 import { formatDate } from '../../utils/formatters';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -43,6 +44,7 @@ export function AddExpenseModal({ navigation, route }) {
   const { isDark } = useTheme();
   const colorScheme = isDark ? 'dark' : 'light';
   const { addExpense, updateExpense } = useExpenses();
+  const { currency } = useSettings();
   const insets = useSafeAreaInsets();
 
   const existing = route?.params?.expense ?? null;
@@ -143,7 +145,7 @@ export function AddExpenseModal({ navigation, route }) {
         <View style={[styles.amountCard, { backgroundColor: themeColors.card[colorScheme], borderColor: themeColors.border[colorScheme] }]}>
           <Text style={[styles.amountLabel, { color: themeColors.muted[colorScheme] }]}>AMOUNT</Text>
           <View style={styles.amountRow}>
-            <Text style={[styles.currencySign, { color: themeColors.gold }]}>$</Text>
+            <Text style={[styles.currencySign, { color: themeColors.gold }]}>{currency.symbol}</Text>
             <TextInput
               value={amount}
               onChangeText={setAmount}
@@ -237,7 +239,7 @@ export function AddExpenseModal({ navigation, route }) {
                   category === cat.id
                     ? { backgroundColor: cat.color, borderColor: cat.color }
                     : {
-                        backgroundColor: isDark ? '#1E293B' : '#F1F5F9',
+                        backgroundColor: isDark ? '#1E293B' : themeColors.secondary[colorScheme],
                         borderColor: themeColors.border[colorScheme],
                       },
                 ]}
