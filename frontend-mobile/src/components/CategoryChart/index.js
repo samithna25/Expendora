@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Path, Text as SvgText } from 'react-native-svg';
 import { useTheme } from '../../context/ThemeContext';
 import { colors as themeColors } from '../../theme/colors';
-import { formatCurrency } from '../../utils/formatters';
+import { useSettings } from '../../context/SettingsContext';
 
 // ─── Geometry helpers ──────────────────────────────────────────────────────────
 
@@ -44,6 +44,7 @@ function donutSegmentPath(cx, cy, outerR, innerR, startAngle, endAngle) {
 
 export function CategoryChart({ data, size = 160, innerRadius = 50, budget }) {
   const { isDark } = useTheme();
+  const { formatAmount } = useSettings();
   const colorScheme = isDark ? 'dark' : 'light';
 
   const total = data.reduce((s, d) => s + d.value, 0);
@@ -105,14 +106,14 @@ export function CategoryChart({ data, size = 160, innerRadius = 50, budget }) {
             fontWeight="bold"
             fill={centerColor}
           >
-            {formatCurrency(centerAmount)}
+            {formatAmount(centerAmount)}
           </SvgText>
         </Svg>
       </View>
 
       {/* ── Legend ── */}
       <View style={styles.legend}>
-        {data.slice(0, 5).map((c, i) => (
+        {data.map((c, i) => (
           <View key={c.name} style={styles.legendItem}>
             <View style={[styles.dot, { backgroundColor: c.color }]} />
             <Text

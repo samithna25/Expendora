@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { colors as themeColors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
 import { EXPENSE_CATEGORIES } from '../../utils/constants';
-import { formatCurrency } from '../../utils/formatters';
+import { useSettings } from '../../context/SettingsContext';
 
 /**
  * ExpenseCard
@@ -21,10 +21,11 @@ import { formatCurrency } from '../../utils/formatters';
  */
 export function ExpenseCard({ transaction, onPress, onEdit, onDelete }) {
   const { isDark } = useTheme();
+  const { formatAmount, fontSizeScale } = useSettings();
   const colorScheme = isDark ? 'dark' : 'light';
   const [actionsVisible, setActionsVisible] = useState(false);
 
-  const category = EXPENSE_CATEGORIES.find((c) => c.id === transaction.category) || EXPENSE_CATEGORIES[7];
+  const category = EXPENSE_CATEGORIES.find((c) => c.id === transaction.category) || EXPENSE_CATEGORIES.find((c) => c.id === 'other');
   const IconComponent = Icons[category.icon] || Icons.Wallet;
 
   const hasActions = onEdit || onDelete;
@@ -59,12 +60,12 @@ export function ExpenseCard({ transaction, onPress, onEdit, onDelete }) {
       {/* ── Merchant + meta ── */}
       <View style={styles.info}>
         <Text
-          style={[styles.merchant, { color: themeColors.foreground[colorScheme] }]}
+          style={[styles.merchant, { color: themeColors.foreground[colorScheme], fontSize: 14 * fontSizeScale }]}
           numberOfLines={1}
         >
           {transaction.merchant}
         </Text>
-        <Text style={[styles.meta, { color: themeColors.muted[colorScheme] }]}>
+        <Text style={[styles.meta, { color: themeColors.muted[colorScheme], fontSize: 11 * fontSizeScale }]}>
           {transaction.date} · {transaction.method}
         </Text>
       </View>
@@ -97,10 +98,10 @@ export function ExpenseCard({ transaction, onPress, onEdit, onDelete }) {
         </View>
       ) : (
         <View style={styles.right}>
-          <Text style={[styles.amount, { color: themeColors.foreground[colorScheme] }]}>
-            -{formatCurrency(transaction.amount)}
+          <Text style={[styles.amount, { color: themeColors.foreground[colorScheme], fontSize: 14 * fontSizeScale }]}>
+            -{formatAmount(transaction.amount)}
           </Text>
-          <Text style={[styles.category, { color: themeColors.muted[colorScheme] }]}>
+          <Text style={[styles.category, { color: themeColors.muted[colorScheme], fontSize: 10 * fontSizeScale }]}>
             {category.name}
           </Text>
         </View>

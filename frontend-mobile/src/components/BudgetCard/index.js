@@ -3,10 +3,11 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { colors as themeColors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
-import { formatCurrency } from '../../utils/formatters';
+import { useSettings } from '../../context/SettingsContext';
 
 export function BudgetCard({ budget }) {
   const { isDark } = useTheme();
+  const { formatAmount } = useSettings();
   const colorScheme = isDark ? 'dark' : 'light';
   const pct = Math.min(100, (budget.spent / budget.limit) * 100);
   const isOver = pct >= 95;
@@ -27,7 +28,7 @@ export function BudgetCard({ budget }) {
             {budget.name}
           </Text>
           <Text style={[styles.spent, { color: themeColors.muted[colorScheme] }]}>
-            {formatCurrency(budget.spent)} of {formatCurrency(budget.limit)}
+            {formatAmount(budget.spent)} of {formatAmount(budget.limit)}
           </Text>
         </View>
         <Text

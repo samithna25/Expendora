@@ -10,7 +10,7 @@ from app.database.db import (
 )
 from app.models.expense_model import create_expense, serialize_expense
 
-VALID_CATEGORIES = {"Food", "Transport", "Shopping", "Bills", "Entertainment", "Other"}
+VALID_CATEGORIES = {"Food", "Transport", "Shopping", "Bills", "Entertainment", "Health", "Education", "Phone", "Beauty", "Sports", "Travel", "Pets", "Donations", "Other"}
 DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 

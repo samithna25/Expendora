@@ -9,10 +9,11 @@ import { ExpenseCard } from '../../components/ExpenseCard';
 import { ReportCard } from '../../components/ReportCard';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { borderRadius, spacing } from '../../theme/spacing';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import { formatDate } from '../../utils/formatters';
 import { useExpenses } from '../../context/ExpenseContext';
 import { useAuth } from '../../context/AuthContext';
-import { CURRENCY_SYMBOL, BUDGET_STORAGE_KEY } from '../../utils/constants';
+import { useSettings } from '../../context/SettingsContext';
+import { BUDGET_STORAGE_KEY } from '../../utils/constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { reportService } from '../../services/reportService';
 import { authService } from '../../services/authService';
@@ -27,6 +28,7 @@ export function DashboardScreen({ navigation }) {
   const colorScheme = isDark ? 'dark' : 'light';
   const { user } = useAuth();
   const { expenses, loading, error, totalSpent, categoryBreakdown, refresh } = useExpenses();
+  const { formatAmount, currency, fontSizeScale } = useSettings();
   const insets = useSafeAreaInsets();
 
   // ─── User budget management ─────────────────────────────────────────────
@@ -128,32 +130,32 @@ export function DashboardScreen({ navigation }) {
       showsVerticalScrollIndicator={false}
     >
       {/* ── Header ── */}
-      <View style={[styles.header, { backgroundColor: '#0D0D0D', paddingTop: Math.max(insets.top, 24) + 12 }]}>
+      <View style={[styles.header, { backgroundColor: isDark ? '#0D0D0D' : themeColors.gold, paddingTop: Math.max(insets.top, 24) + 12 }]}>
         <View style={styles.bgOrb1} />
         <View style={styles.bgOrb2} />
 
         <View style={styles.topRow}>
-          <BrandLogo size={22} variant="white" animated={true} spinDuration={2400} showSubtitle={false} />
-          <TouchableOpacity style={[styles.notifBtn, { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
-            <Bell size={16} color={themeColors.white} />
+          <BrandLogo size={22} variant={isDark ? 'white' : 'dark'} animated={true} spinDuration={2400} showSubtitle={false} />
+          <TouchableOpacity style={[styles.notifBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }]}>
+            <Bell size={16} color={isDark ? themeColors.white : themeColors.black} />
             <View style={styles.notifDot} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.balanceSection}>
-          <Text style={[styles.greeting, { color: 'rgba(245,230,200,0.6)' }]}>
+          <Text style={[styles.greeting, { color: isDark ? 'rgba(245,230,200,0.6)' : 'rgba(0,0,0,0.6)', fontSize: 12 * fontSizeScale }]}>
             {user?.name ? `Good morning, ${user.name.split(' ')[0]} 👋` : 'Good morning 👋'}
           </Text>
           <View style={styles.balanceRow}>
             <TouchableOpacity onPress={openBudgetModal} activeOpacity={0.7}>
               <View style={styles.balanceLabelRow}>
-                <Text style={[styles.balanceLabel, { color: 'rgba(245,230,200,0.55)' }]}>
+                <Text style={[styles.balanceLabel, { color: isDark ? 'rgba(245,230,200,0.55)' : 'rgba(0,0,0,0.55)' }]}>
                   MONTHLY BUDGET
                 </Text>
-                <Pencil size={10} color="rgba(245,230,200,0.45)" />
+                <Pencil size={10} color={isDark ? 'rgba(245,230,200,0.45)' : 'rgba(0,0,0,0.4)'} />
               </View>
-              <Text style={[styles.balanceAmount, { color: themeColors.foreground[colorScheme] }]}>
-                <Text style={{ color: themeColors.gold }}>{CURRENCY_SYMBOL.trim()} </Text>
+              <Text style={[styles.balanceAmount, { color: themeColors.foreground[colorScheme], fontSize: 34 * fontSizeScale }]}>
+                <Text style={{ color: themeColors.gold }}>{currency.symbol} </Text>
                 {String(monthlyLimit.toFixed(0))}
               </Text>
             </TouchableOpacity>
@@ -167,13 +169,13 @@ export function DashboardScreen({ navigation }) {
         <View style={styles.miniStats}>
           <MiniStat
             label="Spent"
-            value={loading ? '...' : formatCurrency(totalSpent)}
+            value={loading ? '...' : formatAmount(totalSpent)}
             sub="this month"
             isDark={isDark}
           />
           <MiniStat
             label="Budget"
-            value={loading ? '...' : formatCurrency(budgetRemaining)}
+            value={loading ? '...' : formatAmount(budgetRemaining)}
             sub="remaining"
             isDark={isDark}
             gold
@@ -249,7 +251,7 @@ export function DashboardScreen({ navigation }) {
       {/* ── Spending by Category Chart ── */}
       <View style={styles.sectionWrapper}>
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: themeColors.foreground[colorScheme] }]}>
+          <Text style={[styles.sectionTitle, { color: themeColors.foreground[colorScheme], fontSize: 15 * fontSizeScale }]}>
             Spending by Category
           </Text>
           <TouchableOpacity
@@ -284,7 +286,7 @@ export function DashboardScreen({ navigation }) {
       {/* ── Recent Transactions ── */}
       <View style={styles.sectionWrapper}>
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: themeColors.foreground[colorScheme] }]}>
+          <Text style={[styles.sectionTitle, { color: themeColors.foreground[colorScheme], fontSize: 15 * fontSizeScale }]}>
             Recent Transactions
           </Text>
           <TouchableOpacity
@@ -340,7 +342,7 @@ export function DashboardScreen({ navigation }) {
             </Text>
             <View style={[styles.inputRow, { borderColor: themeColors.border[colorScheme] }]}>
               <Text style={[styles.inputPrefix, { color: themeColors.foreground[colorScheme] }]}>
-                {CURRENCY_SYMBOL.trim()}
+                {currency.symbol}
               </Text>
               <TextInput
                 style={[styles.modalInput, { color: themeColors.foreground[colorScheme] }]}
@@ -378,23 +380,25 @@ export function DashboardScreen({ navigation }) {
 // ─── MiniStat sub-component ───────────────────────────────────────────────
 function MiniStat({ label, value, sub, isDark, gold, success }) {
   const colorScheme = isDark ? 'dark' : 'light';
+  const { fontSizeScale } = useSettings();
   return (
     <View
       style={[
         styles.statBox,
         {
-          borderColor: gold ? 'rgba(250,204,21,0.4)' : 'rgba(255,255,255,0.1)',
-          backgroundColor: gold ? 'rgba(250,204,21,0.1)' : 'rgba(255,255,255,0.05)',
+          borderColor: gold ? 'rgba(250,204,21,0.4)' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+          backgroundColor: gold ? 'rgba(250,204,21,0.1)' : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
         },
       ]}
     >
-      <Text style={[styles.statLabel, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }]}>
+      <Text style={[styles.statLabel, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)', fontSize: 10 * fontSizeScale }]}>
         {label}
       </Text>
       <Text
         style={[
           styles.statValue,
           {
+            fontSize: 18 * fontSizeScale,
             color: gold
               ? themeColors.gold
               : success
@@ -405,7 +409,7 @@ function MiniStat({ label, value, sub, isDark, gold, success }) {
       >
         {value}
       </Text>
-      <Text style={[styles.statSub, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }]}>
+      <Text style={[styles.statSub, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)', fontSize: 9 * fontSizeScale }]}>
         {sub}
       </Text>
     </View>
