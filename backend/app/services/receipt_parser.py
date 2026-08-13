@@ -29,13 +29,14 @@ CURRENCY_MAP = {
     'inr': 'INR', 'aud': 'AUD',
 }
 
-CURRENCIES_REGEX = r'(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£|rs\.?|lkr|inr|aud)'
+CURRENCIES_REGEX = r'(?:\brm\b|\bmyr\b|\busd\b|\beur\b|\bgbp\b|\bsgd\b|\bs\$\b|\$|€|£|\brs\.?|\blkr\b|\binr\b|\baud\b)'
 
 TOTAL_PATTERNS = [
     rf'\b(?:net|grand)\s+total\b\s*[:;.]?\s*{CURRENCIES_REGEX}?\s*([\d,]+(?:\.\d{{2}})?)',
-    rf'\b(?:net\s+)?amount\b\s*(?:due)?\s*[:;.]?\s*{CURRENCIES_REGEX}?\s*([\d,]+(?:\.\d{{2}})?)',
+    rf'\bnet\s+amount\b\s*(?:due)?\s*[:;.]?\s*{CURRENCIES_REGEX}?\s*([\d,]+(?:\.\d{{2}})?)',
     rf'(?<!\bsub)\s*\btotal\b\s*[:;.]?\s*{CURRENCIES_REGEX}?\s*([\d,]+(?:\.\d{{2}})?)',
     rf'\bbalance\b\s*(?:due)?\s*[:;.]?\s*{CURRENCIES_REGEX}?\s*([\d,]+(?:\.\d{{2}})?)',
+    rf'\bamount\b\s*(?:due)?\s*[:;.]?\s*{CURRENCIES_REGEX}?\s*([\d,]+(?:\.\d{{2}})?)',
     rf'{CURRENCIES_REGEX}\s*([\d,]+(?:\.\d{{2}})?)',
 ]
 
@@ -182,7 +183,7 @@ def _find_best_fallback(text: str) -> tuple | None:
 def _detect_currency(text: str) -> str | None:
     text_lower = text.lower()
     for sym, code in CURRENCY_MAP.items():
-        if sym in text_lower:
+        if re.search(rf'\b{re.escape(sym)}\b', text_lower):
             return code
     if '€' in text:
         return 'EUR'

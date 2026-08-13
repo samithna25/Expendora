@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image } from 'react-native';
 import { X, Sparkles, Check, AlertCircle } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
+import { useSettings } from '../../context/SettingsContext';
 import { colors as themeColors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,12 +20,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
  */
 export function ReceiptPreview({ data, onClose, onSave }) {
   const { isDark } = useTheme();
+  const { currency: userCurrency } = useSettings();
   const colorScheme = isDark ? 'dark' : 'light';
   const insets = useSafeAreaInsets();
 
   const merchantName = data?.merchant_name || 'Unknown Merchant';
   const amount       = data?.amount != null ? Number(data.amount).toFixed(2) : null;
-  const currency     = data?.currency || 'LKR';  // Default to Sri Lankan Rupee
+  const currency     = userCurrency?.code || 'LKR';
   const date         = data?.date || null;
   const category     = data?.category || 'Other';
   const imageUrl     = data?.image_url || null;
