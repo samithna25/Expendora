@@ -74,7 +74,6 @@ export function UploadReceiptScreen({ navigation }) {
     if (!cameraRef.current) return;
 
     try {
-      setStage('scanning');
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.9,
         base64: false,
@@ -83,7 +82,7 @@ export function UploadReceiptScreen({ navigation }) {
       await sendToBackend(photo.uri, 'receipt.jpg', 'image/jpeg');
     } catch (err) {
       setStage('camera');
-      Alert.alert('Camera Error', 'Could not take photo. Please try again.');
+      Alert.alert('Camera Error', `Could not take photo. ${err.message || ''}`);
     }
   };
 

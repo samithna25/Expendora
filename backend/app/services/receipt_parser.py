@@ -29,12 +29,14 @@ CURRENCY_MAP = {
     'inr': 'INR', 'aud': 'AUD',
 }
 
+CURRENCIES_REGEX = r'(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£|rs\.?|lkr|inr|aud)'
+
 TOTAL_PATTERNS = [
-    r'\b(?:net|grand)\s+total\b\s*[:;.]?\s*(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£)?\s*([\d,]+\.\d{2})',
-    r'\b(?:net\s+)?amount\b\s*(?:due)?\s*[:;.]?\s*(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£)?\s*([\d,]+\.\d{2})',
-    r'(?<!\bsub)\s*\btotal\b\s*[:;.]?\s*(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£)?\s*([\d,]+\.\d{2})',
-    r'\bbalance\b\s*(?:due)?\s*[:;.]?\s*(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£)?\s*([\d,]+\.\d{2})',
-    r'(?:rm|myr|usd|eur|gbp|sgd|s\$|\$|€|£)\s*([\d,]+\.\d{2})',
+    rf'\b(?:net|grand)\s+total\b\s*[:;.]?\s*{CURRENCIES_REGEX}?\s*([\d,]+(?:\.\d{{2}})?)',
+    rf'\b(?:net\s+)?amount\b\s*(?:due)?\s*[:;.]?\s*{CURRENCIES_REGEX}?\s*([\d,]+(?:\.\d{{2}})?)',
+    rf'(?<!\bsub)\s*\btotal\b\s*[:;.]?\s*{CURRENCIES_REGEX}?\s*([\d,]+(?:\.\d{{2}})?)',
+    rf'\bbalance\b\s*(?:due)?\s*[:;.]?\s*{CURRENCIES_REGEX}?\s*([\d,]+(?:\.\d{{2}})?)',
+    rf'{CURRENCIES_REGEX}\s*([\d,]+(?:\.\d{{2}})?)',
 ]
 
 DATE_PATTERNS = [
