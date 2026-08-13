@@ -89,8 +89,15 @@ export function AuthProvider({ children }) {
     await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
   };
 
+  const uploadProfilePicture = async (uri) => {
+    const { user: userData } = await authService.uploadProfilePicture(uri);
+    if (userData) {
+      setUser(userData);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, sessionExpired, clearSessionExpired, login, register, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, loading, sessionExpired, clearSessionExpired, login, register, logout, uploadProfilePicture, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );

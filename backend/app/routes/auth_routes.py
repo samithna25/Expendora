@@ -5,6 +5,7 @@ from app.controllers.auth_controller import (
     login_user,
     get_profile_data,
     update_profile,
+    upload_profile_picture,
     logout_user,
     forgot_password,
     reset_password,
@@ -36,6 +37,11 @@ def get_profile():
 def profile():
     data = request.get_json()
     return update_profile(data)
+
+@auth_bp.route('/profile/picture', methods=['POST'])
+@require_auth
+def profile_picture():
+    return upload_profile_picture()
 
 @auth_bp.route('/logout', methods=['POST'])
 @require_auth

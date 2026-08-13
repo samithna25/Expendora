@@ -144,7 +144,7 @@ export function DashboardScreen({ navigation }) {
 
         <View style={styles.balanceSection}>
           <Text style={[styles.greeting, { color: isDark ? 'rgba(245,230,200,0.6)' : 'rgba(0,0,0,0.6)', fontSize: 12 * fontSizeScale }]}>
-            {user?.name ? `Good morning, ${user.name.split(' ')[0]} 👋` : 'Good morning 👋'}
+            {user?.name ? `Welcome, ${user.name.split(' ')[0]} 👋` : 'Welcome 👋'}
           </Text>
           <View style={styles.balanceRow}>
             <TouchableOpacity onPress={openBudgetModal} activeOpacity={0.7}>

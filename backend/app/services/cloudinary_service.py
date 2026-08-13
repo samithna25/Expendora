@@ -32,6 +32,25 @@ def upload_receipt_image(file_path):
         _delete_temp_file(file_path)
 
 
+def upload_profile_image(file_path):
+    try:
+        result = cloudinary.uploader.upload(
+            file_path,
+            folder="expendora/profiles",
+            resource_type="image",
+            overwrite=False,
+        )
+
+        return {
+            "secure_url": result["secure_url"],
+            "public_id":  result["public_id"],
+        }
+    except Exception as e:
+        raise Exception(f"Cloudinary profile upload failed: {str(e)}")
+    finally:
+        _delete_temp_file(file_path)
+
+
 def delete_receipt_image(public_id):
     try:
         result = cloudinary.uploader.destroy(public_id, resource_type="image")
