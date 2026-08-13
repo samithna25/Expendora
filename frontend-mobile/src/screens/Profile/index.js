@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Switch } from 'react-native';
-import { Bell, ChevronRight, HelpCircle, LogOut, Star } from 'lucide-react-native';
+import { Bell, ChevronRight, LogOut, Star, FileText, ShieldCheck, Info, Settings } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 import { colors as themeColors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +12,7 @@ export function ProfileScreen() {
   const { isDark, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const colorScheme = isDark ? 'dark' : 'light';
 
   return (
@@ -73,7 +75,30 @@ export function ProfileScreen() {
                 thumbColor={isDark ? themeColors.black : '#fff'}
               />
             </View>
-            <Row Icon={HelpCircle} label="Help & Support" isDark={isDark} />
+            <Row
+              Icon={Settings}
+              label="Settings"
+              isDark={isDark}
+              onPress={() => navigation.navigate('Settings')}
+            />
+            <Row
+              Icon={FileText}
+              label="Terms & Conditions"
+              isDark={isDark}
+              onPress={() => navigation.navigate('Legal', { section: 'terms' })}
+            />
+            <Row
+              Icon={ShieldCheck}
+              label="Privacy Policy"
+              isDark={isDark}
+              onPress={() => navigation.navigate('Legal', { section: 'privacy' })}
+            />
+            <Row
+              Icon={Info}
+              label="About Us"
+              isDark={isDark}
+              onPress={() => navigation.navigate('Legal', { section: 'about' })}
+            />
           </View>
         </View>
 
@@ -108,9 +133,14 @@ function Stat({ label, value, gold, isDark }) {
   );
 }
 
-function Row({ Icon, label, right, isDark }) {
+function Row({ Icon, label, right, isDark, onPress }) {
   return (
-    <View style={styles.row}>
+    <TouchableOpacity
+      onPress={onPress}
+      style={[styles.row, { borderBottomWidth: 1, borderBottomColor: themeColors.border[isDark ? 'dark' : 'light'] }]}
+      disabled={!onPress}
+      activeOpacity={onPress ? 0.6 : 1}
+    >
       <View style={[styles.rowIcon, { backgroundColor: themeColors.secondary[isDark ? 'dark' : 'light'] }]}>
         <Icon size={16} color={themeColors.foreground[isDark ? 'dark' : 'light']} />
       </View>
@@ -123,7 +153,7 @@ function Row({ Icon, label, right, isDark }) {
         )}
         <ChevronRight size={16} color={themeColors.muted[isDark ? 'dark' : 'light']} />
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
