@@ -116,6 +116,17 @@ def get_dashboard_analytics(user_id: str, month: str = None, total_monthly_limit
     # 6. Natural language spending insights
     insights = generate_insights(monthly_total, top_category, alerts, monthly_limit=budget_status.get("monthly_limit"))
 
+    # 5. Fetch all expenses for the month for the PDF report
+    expenses_cursor = db["expenses"].find({"userId": user_obj_id, "date": {"$regex": f"^{month}"}}).sort("date", -1)
+    expenses_list = []
+    for exp in expenses_cursor:
+        expenses_list.append({
+            "merchant": exp.get("merchant", "Unknown"),
+            "amount": float(exp.get("amount", 0)),
+            "date": exp.get("date", ""),
+            "category": exp.get("category", "Other")
+        })
+
     return {
         "month": month,
         "monthly_total": round(monthly_total, 2),
@@ -127,6 +138,7 @@ def get_dashboard_analytics(user_id: str, month: str = None, total_monthly_limit
         "budget_status": budget_status,
         "alerts": alerts,
         "insights": insights,
+        "expenses": expenses_list
     }
 
 

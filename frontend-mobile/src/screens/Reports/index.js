@@ -7,7 +7,11 @@ import {
   Dimensions,
   StyleSheet,
   RefreshControl,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import { Download, TrendingDown, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react-native';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,10 +20,11 @@ import { colors as themeColors } from '../../theme/colors';
 import { CategoryChart } from '../../components/CategoryChart';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { borderRadius } from '../../theme/spacing';
-import { PERIOD_TABS, EXPENSE_CATEGORIES } from '../../utils/constants';
+import { PERIOD_TABS, EXPENSE_CATEGORIES, API_BASE_URL } from '../../utils/constants';
 import { formatCurrency } from '../../utils/formatters';
 import { useExpenses } from '../../context/ExpenseContext';
 import { expenseService } from '../../services/expenseService';
+import { reportService } from '../../services/reportService';
 
 // ─── Chart dimensions ─────────────────────────────────────────────────────────
 const { width: screenWidth } = Dimensions.get('window');
@@ -138,6 +143,63 @@ export function ReportsScreen() {
   const [trendLoading, setTrendLoading] = useState(true);
   const [trendError, setTrendError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloading(true);
+      const d = new Date();
+      let monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      
+      // If there are expenses in the context, find the most recent one to determine the month
+      // This prevents empty PDFs if the user is viewing historical data (e.g. from 05/24)
+      if (expenses && expenses.length > 0) {
+        const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+        if (sorted[0].date) {
+          monthStr = sorted[0].date.substring(0, 7);
+        }
+      }
+      
+      const { uri, headers } = await reportService.downloadPdf(monthStr);
+      
+      const fileUri = `${FileSystem.documentDirectory}Expendora_Report_${monthStr}.pdf`;
+      const downloadRes = await FileSystem.downloadAsync(uri, fileUri, { headers });
+      
+      if (downloadRes.status !== 200) {
+        throw new Error('Failed to download PDF from server.');
+      }
+      
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(downloadRes.uri);
+      } else {
+        Alert.alert('Downloaded', `File saved to ${downloadRes.uri}`);
+      }
+    } catch (err) {
+      Alert.alert('Download Error', err.message);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const [testingEmail, setTestingEmail] = useState(false);
+  const handleTestEmail = async () => {
+    try {
+      setTestingEmail(true);
+      // n8n is usually running on the same host but port 5678
+      // API_BASE_URL might be 'http://192.168.1.100:5000' -> 'http://192.168.1.100:5678'
+      const n8nUrl = API_BASE_URL.replace(/:\d+$/, '') + ':5678/webhook-test/trigger-monthly-reports';
+      
+      const response = await fetch(n8nUrl, { method: 'POST' });
+      if (!response.ok) {
+        throw new Error('Failed to trigger n8n webhook. Make sure you clicked "Listen for Test Event" in n8n.');
+      }
+      Alert.alert('Success', 'Email workflow triggered! Check your n8n dashboard and inbox.');
+    } catch (err) {
+      Alert.alert('Test Failed', err.message);
+    } finally {
+      setTestingEmail(false);
+    }
+  };
 
   const fetchTrend = useCallback(async () => {
     setTrendLoading(true);
@@ -215,10 +277,30 @@ export function ReportsScreen() {
               Live analytics
             </Text>
           </View>
-          <TouchableOpacity style={styles.pdfBtn}>
-            <Download size={14} color={themeColors.black} />
-            <Text style={styles.pdfText}>PDF</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row' }}>
+            <TouchableOpacity 
+              style={[styles.pdfBtn, { backgroundColor: '#e2e8f0', marginRight: 10 }]} 
+              onPress={handleTestEmail} 
+              disabled={testingEmail}
+            >
+              {testingEmail ? (
+                <ActivityIndicator size="small" color={themeColors.black} />
+              ) : (
+                <Text style={styles.pdfText}>Test Email</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.pdfBtn} onPress={handleDownloadPdf} disabled={downloading}>
+              {downloading ? (
+                <ActivityIndicator size="small" color={themeColors.black} />
+              ) : (
+                <>
+                  <Download size={14} color={themeColors.black} />
+                  <Text style={styles.pdfText}>PDF</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={[styles.tabRow, { backgroundColor: themeColors.secondary[colorScheme] }]}>

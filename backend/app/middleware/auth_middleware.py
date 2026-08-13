@@ -1,3 +1,4 @@
+import os
 from functools import wraps
 from flask import request, jsonify
 from bson import ObjectId
@@ -61,4 +62,23 @@ def require_auth(f):
         request.current_user = payload
         return f(*args, **kwargs)
 
+    return decorated
+
+def require_api_key(f):
+    """
+    Decorator to protect internal routes via an API Key.
+    Checks the X-API-KEY header against the N8N_API_KEY env var.
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        api_key = request.headers.get("X-API-KEY")
+        expected_key = os.environ.get("N8N_API_KEY", "default_secret_n8n_key")
+        
+        if not api_key or api_key != expected_key:
+            return jsonify({
+                "success": False,
+                "message": "Forbidden: Invalid API Key"
+            }), 403
+            
+        return f(*args, **kwargs)
     return decorated
