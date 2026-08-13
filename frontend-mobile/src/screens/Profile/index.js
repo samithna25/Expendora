@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { Bell, ChevronRight, LogOut, Star, FileText, ShieldCheck, Info, Settings } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, Alert } from 'react-native';
+import { Bell, ChevronRight, LogOut, Camera, Star, FileText, ShieldCheck, Info, Settings } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
@@ -11,11 +12,55 @@ import { useSettings } from '../../context/SettingsContext';
 
 export function ProfileScreen() {
   const { isDark } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, uploadProfilePicture } = useAuth();
+  const [isUploading, setIsUploading] = useState(false);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const colorScheme = isDark ? 'dark' : 'light';
   const { fontSizeScale } = useSettings();
+  const processImage = async (result) => {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setIsUploading(true);
+      try {
+        await uploadProfilePicture(result.assets[0].uri);
+      } catch (error) {
+        Alert.alert('Upload Failed', error.message || 'Could not upload profile picture.');
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+
+  const pickImageFromLibrary = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      Alert.alert('Permission to access camera roll is required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    processImage(result);
+  };
+
+  const pickImageFromCamera = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (permissionResult.granted === false) {
+      Alert.alert('Permission to access camera is required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    processImage(result);
+  };
 
   return (
     <ScrollView
@@ -27,12 +72,22 @@ export function ProfileScreen() {
         <View style={styles.headerOrb} />
 
         <View style={styles.profileSection}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>A</Text>
+          <TouchableOpacity style={styles.avatar} onPress={() => {
+            Alert.alert('Profile Photo', 'Choose an option', [
+              { text: 'Take Photo', onPress: pickImageFromCamera },
+              { text: 'Choose from Library', onPress: pickImageFromLibrary },
+              { text: 'Cancel', style: 'cancel' }
+            ]);
+          }} disabled={isUploading}>
+            {user?.profile_picture ? (
+              <Image source={{ uri: user.profile_picture }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{user?.name?.[0]?.toUpperCase() || 'A'}</Text>
+            )}
             <View style={styles.verifiedBadge}>
-              <Star size={10} color={themeColors.white} />
+              <Camera size={10} color={themeColors.white} />
             </View>
-          </View>
+          </TouchableOpacity>
           <View style={styles.profileInfo}>
             <Text style={[styles.name, { color: themeColors.white, fontSize: 16 * fontSizeScale }]}>
               {user?.name}
@@ -40,9 +95,6 @@ export function ProfileScreen() {
             <Text style={[styles.email, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)', fontSize: 12 * fontSizeScale }]}>
               {user?.email}
             </Text>
-            <View style={styles.proBadge}>
-              <Text style={styles.proBadgeText}>PRO MEMBER</Text>
-            </View>
           </View>
         </View>
       </View>
@@ -96,7 +148,7 @@ export function ProfileScreen() {
 
         <View style={styles.footer}>
           <Text style={[styles.version, { color: themeColors.muted[isDark ? 'dark' : 'light'] }]}>
-            Version 1.0.0 · Cloud Edition
+            Version 1.0.0 · new#
           </Text>
         </View>
       </View>
@@ -160,6 +212,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
+  avatarImage: { width: '100%', height: '100%', borderRadius: 16 },
   avatarText: { fontSize: 22, fontWeight: '700', color: themeColors.black },
   verifiedBadge: {
     position: 'absolute',

@@ -106,7 +106,8 @@ def register_user(data):
             'user': {
                 'id': user_id,
                 'name': name,
-                'email': email
+                'email': email,
+                'profile_picture': None
             },
             'token': token
         }
@@ -148,6 +149,7 @@ def login_user(data):
                         'name': name,
                         'email': email,
                         'monthly_budget': user.get('monthly_budget'),
+                        'profile_picture': user.get('profile_picture'),
                     },
                     'token': token
                 }
@@ -183,6 +185,7 @@ def get_profile_data():
                 'name': user.get('name', ''),
                 'email': user.get('email', ''),
                 'monthly_budget': user.get('monthly_budget'),
+                'profile_picture': user.get('profile_picture'),
             }
         }
     }), 200
@@ -220,9 +223,53 @@ def update_profile(data):
                 'name': user.get('name', ''),
                 'email': user.get('email', ''),
                 'monthly_budget': user.get('monthly_budget'),
+                'profile_picture': user.get('profile_picture'),
             }
         }
     }), 200
+
+
+def upload_profile_picture():
+    """POST /auth/profile/picture — upload profile picture to cloudinary and save url."""
+    user_id = request.current_user["user_id"]
+    db = get_db()
+    if db is None:
+        return jsonify({'status': 'error', 'message': 'Database connection failed'}), 500
+
+    if 'file' not in request.files:
+        return jsonify({'status': 'error', 'message': 'No file part'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'status': 'error', 'message': 'No selected file'}), 400
+
+    os.makedirs('/tmp', exist_ok=True)
+    temp_path = f"/tmp/{user_id}_{file.filename}"
+    file.save(temp_path)
+
+    try:
+        from app.services.cloudinary_service import upload_profile_image
+        cloudinary_data = upload_profile_image(temp_path)
+        secure_url = cloudinary_data["secure_url"]
+
+        db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {"profile_picture": secure_url}})
+
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+        return jsonify({
+            'status': 'success',
+            'message': 'Profile picture updated',
+            'data': {
+                'user': {
+                    'id': str(user['_id']),
+                    'name': user.get('name', ''),
+                    'email': user.get('email', ''),
+                    'monthly_budget': user.get('monthly_budget'),
+                    'profile_picture': user.get('profile_picture'),
+                }
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 def logout_user():

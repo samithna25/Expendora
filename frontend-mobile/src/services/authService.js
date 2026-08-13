@@ -46,5 +46,21 @@ export const authService = {
     const response = await api.put('/auth/change-password', { currentPassword, newPassword });
     return response;
   },
+
+  async uploadProfilePicture(uri) {
+    const formData = new FormData();
+    const filename = uri.split('/').pop() || 'profile.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : `image/jpeg`;
+    
+    formData.append('file', {
+      uri,
+      name: filename,
+      type,
+    });
+    
+    const response = await api.upload('/auth/profile/picture', formData);
+    return response.data;
+  },
 };
 

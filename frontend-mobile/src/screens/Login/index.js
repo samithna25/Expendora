@@ -109,10 +109,6 @@ export function LoginScreen() {
             <TouchableOpacity style={styles.socialBtn}>
               <Text style={styles.socialBtnText}>Google</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialBtn}>
-              <Apple size={16} color={colors.white} />
-              <Text style={styles.socialBtnText}> Apple</Text>
-            </TouchableOpacity>
           </View>
         </View>
 
