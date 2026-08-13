@@ -15,5 +15,10 @@ class Config:
     OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
 
     N8N_WEBHOOK_PASSWORD_RESET = os.getenv("N8N_WEBHOOK_PASSWORD_RESET")
+    N8N_WEBHOOK_BUDGET_ALERT = (
+        os.getenv("N8N_WEBHOOK_BUDGET_ALERT")
+        or os.getenv("N8N_WEBHOOK_BUDGET_EXCEEDED")
+        or "http://localhost:5678/webhook/budget-alert"
+    )
     FRONTEND_URL = os.getenv("FRONTEND_URL", "expendora://")
     BACKEND_PUBLIC_URL = os.getenv("BACKEND_PUBLIC_URL")

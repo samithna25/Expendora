@@ -57,3 +57,31 @@ def trigger_password_reset_email(email, reset_token, expires_at, user_name=""):
     except requests.RequestException as exc:
         logger.error("Failed to trigger n8n password reset webhook: %s", exc)
         return False
+
+def trigger_budget_alert_webhook(user_id, email, budget, spent, percentage):
+    """POST budget alert payload to the n8n webhook."""
+    url = Config.N8N_WEBHOOK_BUDGET_ALERT
+    if not url:
+        logger.warning("N8N_WEBHOOK_BUDGET_ALERT is not set; skipping budget alert webhook")
+        return False
+
+    payload = {
+        "userId": user_id,
+        "email": email,
+        "budget": budget,
+        "spent": spent,
+        "percentage": percentage
+    }
+
+    try:
+        import threading
+        def _fire():
+            try:
+                requests.post(url, json=payload, timeout=10)
+            except Exception as e:
+                logger.error("Failed to trigger n8n budget alert webhook: %s", e)
+        threading.Thread(target=_fire).start()
+        return True
+    except Exception as exc:
+        logger.error("Failed to start thread for budget alert webhook: %s", exc)
+        return False
