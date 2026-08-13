@@ -6,7 +6,7 @@ import { colors as themeColors } from '../../theme/colors';
 import { BudgetCard } from '../../components/BudgetCard';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { borderRadius } from '../../theme/spacing';
-import { formatCurrency } from '../../utils/formatters';
+import { useSettings } from '../../context/SettingsContext';
 import { useExpenses } from '../../context/ExpenseContext';
 import { EXPENSE_CATEGORIES } from '../../utils/constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,6 +23,12 @@ const DEFAULT_LIMITS = {
   entertainment: 150,
   health: 200,
   education: 100,
+  phone: 100,
+  beauty: 150,
+  sports: 100,
+  travel: 300,
+  pets: 150,
+  donations: 50,
   other: 100,
 };
 
@@ -39,6 +45,7 @@ export function BudgetPlannerScreen({ navigation }) {
   const colorScheme = isDark ? 'dark' : 'light';
   const insets = useSafeAreaInsets();
   const { expenses, loading, error, refresh } = useExpenses();
+  const { formatAmount } = useSettings();
 
   // ─── Derive live spending per category ───────────────────────────────────
   const categorySpending = useMemo(() => {
@@ -115,7 +122,7 @@ export function BudgetPlannerScreen({ navigation }) {
               <View style={[styles.progressFill, { width: `${Math.min(100, pct)}%` }]} />
             </View>
             <Text style={[styles.progressLabel, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }]}>
-              {(100 - pct).toFixed(0)}% remaining · {formatCurrency(totalBudget - totalSpent)} left
+              {(100 - pct).toFixed(0)}% remaining · {formatAmount(totalBudget - totalSpent)} left
             </Text>
           </View>
         )}
@@ -137,9 +144,9 @@ export function BudgetPlannerScreen({ navigation }) {
                 : `${nearLimitBudget.name} near limit`}
             </Text>
             <Text style={[styles.alertDesc, { color: themeColors.muted[colorScheme] }]}>
-              {formatCurrency(nearLimitBudget.spent)} spent of {formatCurrency(nearLimitBudget.limit)} budget
+              {formatAmount(nearLimitBudget.spent)} spent of {formatAmount(nearLimitBudget.limit)} budget
               {nearLimitBudget.spent < nearLimitBudget.limit
-                ? ` · ${formatCurrency(nearLimitBudget.limit - nearLimitBudget.spent)} remaining`
+                ? ` · ${formatAmount(nearLimitBudget.limit - nearLimitBudget.spent)} remaining`
                 : ' — consider reducing spending.'}
             </Text>
           </View>

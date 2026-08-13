@@ -20,6 +20,12 @@ export const EXPENSE_CATEGORIES = [
   { id: 'entertainment', name: 'Entertainment',   icon: 'Music',           color: '#B8860B' },  // Goldenrod
   { id: 'health',        name: 'Health',          icon: 'HeartPulse',      color: '#E8C547' },  // Bright Gold
   { id: 'education',     name: 'Education',       icon: 'GraduationCap',   color: '#6B5320' },  // Deep Bronze
+  { id: 'phone',         name: 'Phone',           icon: 'Smartphone',      color: '#A08040' },
+  { id: 'beauty',        name: 'Beauty',          icon: 'Scissors',        color: '#D6B475' },
+  { id: 'sports',        name: 'Sports',          icon: 'Dumbbell',        color: '#8C7A4A' },
+  { id: 'travel',        name: 'Travel',          icon: 'Plane',           color: '#C7A76D' },
+  { id: 'pets',          name: 'Pets',            icon: 'Dog',             color: '#B59458' },
+  { id: 'donations',     name: 'Donations',       icon: 'Heart',           color: '#F0D49C' },
   { id: 'other',         name: 'Other',           icon: 'Wallet',          color: '#4A3720' },  // Dark Umber
 ];
 

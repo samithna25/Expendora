@@ -21,7 +21,7 @@ import { CategoryChart } from '../../components/CategoryChart';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { borderRadius } from '../../theme/spacing';
 import { PERIOD_TABS, EXPENSE_CATEGORIES, API_BASE_URL } from '../../utils/constants';
-import { formatCurrency } from '../../utils/formatters';
+import { useSettings } from '../../context/SettingsContext';
 import { useExpenses } from '../../context/ExpenseContext';
 import { expenseService } from '../../services/expenseService';
 import { reportService } from '../../services/reportService';
@@ -43,6 +43,12 @@ const DEFAULT_LIMITS = {
   entertainment: 150,
   health: 200,
   education: 100,
+  phone: 100,
+  beauty: 150,
+  sports: 100,
+  travel: 300,
+  pets: 150,
+  donations: 50,
   other: 100,
 };
 
@@ -97,6 +103,7 @@ function SpendingTrendChart({ data }) {
 function BudgetBar({ name, spent, limit, color }) {
   const { isDark } = useTheme();
   const colorScheme = isDark ? 'dark' : 'light';
+  const { formatAmount } = useSettings();
   const pct = Math.min(100, (spent / limit) * 100);
   const over = pct >= 95;
   return (
@@ -113,7 +120,7 @@ function BudgetBar({ name, spent, limit, color }) {
               : { color: themeColors.muted[colorScheme] },
           ]}
         >
-          {formatCurrency(spent)}
+          {formatAmount(spent)}
         </Text>
       </View>
       <View style={[styles.budgetBarBg, { backgroundColor: themeColors.secondary[colorScheme] }]}>
@@ -133,6 +140,7 @@ export function ReportsScreen() {
   const { isDark } = useTheme();
   const colorScheme = isDark ? 'dark' : 'light';
   const insets = useSafeAreaInsets();
+  const { formatAmount } = useSettings();
   const [periodIndex, setPeriodIndex] = useState(1);
 
   // Live data from ExpenseContext
@@ -340,9 +348,9 @@ export function ReportsScreen() {
               Spending Trend
             </Text>
             <Text style={[styles.trendValue, { color: themeColors.foreground[colorScheme] }]}>
-              {formatCurrency(totalSpent)}
+              {formatAmount(totalSpent)}
               <Text style={[styles.trendSub, { color: themeColors.muted[colorScheme] }]}>
-                {' '}/ {formatCurrency(DEFAULT_LIMITS.food + DEFAULT_LIMITS.transport + DEFAULT_LIMITS.shopping + DEFAULT_LIMITS.bills + DEFAULT_LIMITS.entertainment)}
+                {' '}/ {formatAmount(DEFAULT_LIMITS.food + DEFAULT_LIMITS.transport + DEFAULT_LIMITS.shopping + DEFAULT_LIMITS.bills + DEFAULT_LIMITS.entertainment)}
               </Text>
             </Text>
           </View>

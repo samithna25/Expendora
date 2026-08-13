@@ -37,7 +37,14 @@ export const authService = {
     return tryOrMock(() => api.post('/auth/forgot-password', { email }), { ok: true });
   },
 
+
   async resetPassword(token, password) {
     return tryOrMock(() => api.post('/auth/reset-password', { token, password }), { ok: true });
   },
+
+  async changePassword({ currentPassword, newPassword }) {
+    const response = await api.put('/auth/change-password', { currentPassword, newPassword });
+    return response;
+  },
 };
+

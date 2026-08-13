@@ -349,3 +349,58 @@ def reset_password(data):
         "success": True,
         "message": "Password has been reset successfully. Please log in.",
     }), 200
+
+
+def change_password(data):
+    """PUT /auth/change-password — verify current password, update to new one."""
+    if not data:
+        return jsonify({
+            "success": False,
+            "message": "No data provided.",
+        }), 400
+
+    current_password = data.get("currentPassword")
+    new_password = data.get("newPassword")
+
+    if not current_password or not new_password:
+        return jsonify({
+            "success": False,
+            "message": "Current password and new password are required.",
+        }), 400
+
+    if not validate_reset_password(new_password):
+        return jsonify({
+            "success": False,
+            "message": "New password must be at least 8 characters.",
+        }), 400
+
+    user_id = request.current_user["user_id"]
+    db = get_db()
+    if db is None:
+        return jsonify({"success": False, "message": "Database connection failed."}), 500
+
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        return jsonify({"success": False, "message": "User not found."}), 404
+
+    if not check_password_hash(user["password"], current_password):
+        return jsonify({
+            "success": False,
+            "message": "Current password is incorrect.",
+        }), 401
+
+    if check_password_hash(user["password"], new_password):
+        return jsonify({
+            "success": False,
+            "message": "New password must be different from your current password.",
+        }), 400
+
+    db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"password": generate_password_hash(new_password)}},
+    )
+
+    return jsonify({
+        "success": True,
+        "message": "Password updated successfully.",
+    }), 200
