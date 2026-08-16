@@ -11,6 +11,7 @@ from app.database.db import get_db
 from app.models.user_model import create_user
 from app.services import email_service
 from app.services.n8n_service import trigger_password_reset_email
+from app.services.email_service import send_welcome_email
 from app.utils.jwt_utils import generate_token
 from app.utils.password_utils import hash_password
 import os
@@ -33,20 +34,9 @@ FORGOT_PASSWORD_MESSAGE = (
     "If this email is registered, a password reset link has been sent."
 )
 def trigger_welcome_email(user_id, name, email):
-    """Fire-and-forget: POST to n8n welcome email webhook in a background thread."""
+    """Fire-and-forget: Send welcome email in a background thread using SMTP."""
     def _send():
-        try:
-            webhook_url = os.getenv('N8N_WEBHOOK_WELCOME', 'http://localhost:5678/webhook/expendora-welcome')
-            payload = {
-                'userId': user_id,
-                'name': name,
-                'email': email
-            }
-            print(f"[n8n] Triggering welcome email webhook → {webhook_url}")
-            response = requests.post(webhook_url, json=payload, timeout=5)
-            print(f"[n8n] Webhook response: {response.status_code} {response.text}")
-        except Exception as e:
-            print(f"[n8n] Webhook failed: {e}")
+        send_welcome_email(email, name)
     threading.Thread(target=_send, daemon=True).start()
 
 def register_user(data):
