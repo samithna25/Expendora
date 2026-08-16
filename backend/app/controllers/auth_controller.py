@@ -9,6 +9,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.database.db import get_db
 from app.models.user_model import create_user
+from app.services import email_service
 from app.services.n8n_service import trigger_password_reset_email
 from app.utils.jwt_utils import generate_token
 from app.utils.password_utils import hash_password
@@ -322,12 +323,20 @@ def forgot_password(data):
                 "created_at": datetime.now(timezone.utc),
             })
 
-            trigger_password_reset_email(
-                email=email,
-                reset_token=plain_token,
-                expires_at=expires_at.isoformat(),
-                user_name=user.get("name", ""),
-            )
+            if email_service.email_mode_is_code():
+                email_service.send_password_reset_email(
+                    email=email,
+                    reset_token=plain_token,
+                    expires_at=expires_at.isoformat(),
+                    user_name=user.get("name", ""),
+                )
+            else:
+                trigger_password_reset_email(
+                    email=email,
+                    reset_token=plain_token,
+                    expires_at=expires_at.isoformat(),
+                    user_name=user.get("name", ""),
+                )
 
     return jsonify({
         "success": True,
