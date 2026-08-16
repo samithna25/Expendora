@@ -33,11 +33,7 @@ def validate_reset_password(password):
 FORGOT_PASSWORD_MESSAGE = (
     "If this email is registered, a password reset link has been sent."
 )
-def trigger_welcome_email(user_id, name, email):
-    """Fire-and-forget: Send welcome email in a background thread using SMTP."""
-    def _send():
-        send_welcome_email(email, name)
-    threading.Thread(target=_send, daemon=True).start()
+# Removed trigger_welcome_email wrapper because email_service already handles threading
 
 def register_user(data):
     if not data or 'email' not in data or 'password' not in data:
@@ -87,8 +83,8 @@ def register_user(data):
     session_id = str(session_result.inserted_id)
     token = generate_token(user_id, email, session_id=session_id)
 
-    # Trigger n8n welcome email workflow (non-blocking)
-    trigger_welcome_email(user_id, name, email)
+    # Trigger welcome email via code (non-blocking, uses thread internally)
+    send_welcome_email(email, name)
 
     return jsonify({
         'status': 'success',

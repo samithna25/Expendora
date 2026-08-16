@@ -106,3 +106,52 @@ def budget_alert_text(percentage, budget, spent):
         f"Spent So Far: {spent}\n"
         f"Review your expenses to stay within your limit this month."
     )
+
+
+def welcome_email_html(user_name):
+    name = _escape(user_name or "there")
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to Expendora</title>
+</head>
+<body style="margin:0;padding:0;background-color:#111111;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#111111;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">
+          <tr>
+            <td align="center" style="padding-bottom:28px;">
+              <p style="margin:0;font-size:24px;font-weight:800;letter-spacing:4px;color:#FACC15;">&#10022; EXPENDORA</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#1A1A1A;border-radius:16px;border:1px solid #2E2510;padding:40px 36px;">
+              <p style="margin:0 0 8px 0;font-size:20px;font-weight:700;color:#FFFFFF;">Hi {name},</p>
+              <p style="margin:0 0 24px 0;font-size:15px;color:#AAAAAA;line-height:1.7;">Welcome to Expendora! We're thrilled to have you on board. Expendora is designed to help you track your expenses effortlessly and keep your budget in check.</p>
+              
+              <p style="margin:0 0 16px 0;font-size:15px;color:#FFFFFF;font-weight:600;">Here's what you can do next:</p>
+              <ul style="margin:0 0 32px 0;padding-left:20px;color:#AAAAAA;font-size:15px;line-height:1.7;">
+                <li style="margin-bottom:8px;">Add your first expense to see your insights.</li>
+                <li style="margin-bottom:8px;">Set up a monthly budget to get timely alerts.</li>
+                <li style="margin-bottom:8px;">Explore categories and view AI-powered reports.</li>
+              </ul>
+              
+
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:24px;"><tr><td style="border-top:1px solid #2A2A2A;font-size:0;line-height:0;">&nbsp;</td></tr></table>
+              <p style="margin:0;font-size:13px;color:#666666;line-height:1.6;">If you have any questions or need help, just reply to this email.</p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding-top:28px;">
+              <p style="margin:0;font-size:12px;color:#444444;">&copy; 2026 Expendora. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
