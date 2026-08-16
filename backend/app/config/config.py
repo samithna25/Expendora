@@ -16,11 +16,11 @@ class Config:
     OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
 
     EMAIL_MODE = os.getenv("EMAIL_MODE", "code")
-    SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    SMTP_HOST = os.getenv("SMTP_HOST") or os.getenv("SMTP_SERVER", "smtp.gmail.com")
     SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
-    SMTP_USER = os.getenv("SMTP_USER")
+    SMTP_USER = os.getenv("SMTP_USER") or os.getenv("SMTP_USERNAME")
     SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-    SMTP_FROM = os.getenv("SMTP_FROM") or os.getenv("SMTP_USER") or "expendora.app@gmail.com"
+    SMTP_FROM = os.getenv("SMTP_FROM") or os.getenv("SENDER_EMAIL") or SMTP_USER or "expendora.app@gmail.com"
 
     N8N_WEBHOOK_PASSWORD_RESET = os.getenv("N8N_WEBHOOK_PASSWORD_RESET")
     N8N_WEBHOOK_BUDGET_ALERT = (
