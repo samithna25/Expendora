@@ -39,7 +39,7 @@ const LEGAL_CONTENT = {
       { heading: 'Who We Are', body: 'Expendora is a modern expense management platform designed to help individuals and small teams track spending, scan receipts, and understand their financial habits at a glance.' },
       { heading: 'Our Mission', body: 'Our mission is to make financial tracking effortless and accessible. We combine smart receipt scanning with intuitive reporting so you can focus on your goals instead of spreadsheets.' },
       { heading: 'What We Offer', body: 'Smart receipt scanning, automatic expense categorization, monthly reports, budget planning, and a clean, fast interface that respects your privacy.' },
-      { heading: 'Contact Us', body: 'We love hearing from our users. For feedback, feature requests, or support, use the Help & Support option in your profile settings and we will get back to you.' },
+      { heading: 'Contact Us', body: 'We love hearing from our users. For feedback, feature requests, or support, use the Help & Support option in your profile settings or email us at expendora.app@gmail.com and we will get back to you.' },
     ],
   },
 };

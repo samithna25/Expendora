@@ -68,7 +68,7 @@ export function ProfileScreen() {
       contentContainerStyle={{ paddingBottom: 110 + Math.max(insets.bottom, 12) }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.gold, paddingTop: Math.max(insets.top, 24) + 12 }]}>
+      <View style={[styles.header, { backgroundColor: isDark ? '#1a1a2e' : themeColors.card.light, paddingTop: Math.max(insets.top, 24) + 12 }]}>
         <View style={styles.headerOrb} />
 
         <View style={styles.profileSection}>
@@ -89,7 +89,7 @@ export function ProfileScreen() {
             </View>
           </TouchableOpacity>
           <View style={styles.profileInfo}>
-            <Text style={[styles.name, { color: themeColors.white, fontSize: 16 * fontSizeScale }]}>
+            <Text style={[styles.name, { color: isDark ? themeColors.white : themeColors.black, fontSize: 16 * fontSizeScale }]}>
               {user?.name}
             </Text>
             <Text style={[styles.email, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)', fontSize: 12 * fontSizeScale }]}>

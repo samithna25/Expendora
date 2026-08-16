@@ -130,16 +130,12 @@ export function DashboardScreen({ navigation }) {
       showsVerticalScrollIndicator={false}
     >
       {/* ── Header ── */}
-      <View style={[styles.header, { backgroundColor: isDark ? '#0D0D0D' : themeColors.gold, paddingTop: Math.max(insets.top, 24) + 12 }]}>
+      <View style={[styles.header, { backgroundColor: isDark ? '#0D0D0D' : themeColors.card.light, paddingTop: Math.max(insets.top, 24) + 12 }]}>
         <View style={styles.bgOrb1} />
         <View style={styles.bgOrb2} />
 
         <View style={styles.topRow}>
-          <BrandLogo size={22} variant={isDark ? 'white' : 'dark'} animated={true} spinDuration={2400} showSubtitle={false} />
-          <TouchableOpacity style={[styles.notifBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }]}>
-            <Bell size={16} color={isDark ? themeColors.white : themeColors.black} />
-            <View style={styles.notifDot} />
-          </TouchableOpacity>
+          <BrandLogo size={22} variant={isDark ? 'white' : 'original'} animated={true} spinDuration={2400} showSubtitle={false} />
         </View>
 
         <View style={styles.balanceSection}>
