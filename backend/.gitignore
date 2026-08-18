@@ -1,0 +1,7 @@
+env
+dotenv
+__pycache__
+uploads
+*.pyc
+*.log
+test_categorizer.py

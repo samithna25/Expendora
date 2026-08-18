@@ -1,0 +1,154 @@
+{
+  "name": "Expendora Monthly Report (Webhook & PDF)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trigger-monthly-reports",
+        "options": {}
+      },
+      "id": "e458e0a2-2d19-4591-a1e4-325b169c9b5d",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        100,
+        280
+      ],
+      "webhookId": "fb5eb0e3-6f4e-4f32-ab20-c24ccb3f81e7"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5000/reports/internal/monthly-batch",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY",
+              "value": "YOUR_N8N_API_KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "679f220d-b8d9-4828-912a-0402b8d0a273",
+      "name": "Fetch Batch Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        320,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "423fdbec-d3be-497b-95a9-46736ddabfc1",
+      "name": "Split Users",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [
+        540,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:5000/reports/internal/pdf?user_id={{$json.user_id}}&month={{$json.month}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY",
+              "value": "YOUR_N8N_API_KEY"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "fetch-pdf-node-id",
+      "name": "Fetch PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        760,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "your-email@example.com",
+        "toEmail": "={{ $('Split Users').item.json.email }}",
+        "subject": "=Your Monthly Spending Report for {{ $('Split Users').item.json.month }}",
+        "html": "=<div style=\"font-family: Arial, sans-serif; padding: 20px;\">\n    <h1 style=\"color: #FACC15; background: #1E293B; padding: 15px; border-radius: 8px;\">\n        Expendora\n    </h1>\n    <h2>Hi {{ $('Split Users').item.json.name }},</h2>\n    <p>Here is your monthly spending summary for <b>{{ $('Split Users').item.json.month }}</b>.</p>\n    \n    <div style=\"background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #E2E8F0;\">\n        <h3>Total Spent: Rs. {{ $('Split Users').item.json.monthly_total }}</h3>\n    </div>\n    \n    <h3>Insights</h3>\n    <p style=\"white-space: pre-wrap;\">{{ $('Split Users').item.json.insights }}</p>\n    \n    <p style=\"color: #64748B; margin-top: 30px;\">\n        Please find your full detailed statement attached as a PDF.\n    </p>\n</div>",
+        "attachments": "data"
+      },
+      "id": "9a38f322-a9b0-466d-bad2-5dff6696db86",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        980,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Batch Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Batch Data": {
+      "main": [
+        [
+          {
+            "node": "Split Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Users": {
+      "main": [
+        [
+          {
+            "node": "Fetch PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch PDF": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

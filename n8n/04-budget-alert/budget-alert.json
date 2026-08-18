@@ -1,0 +1,130 @@
+{
+  "name": "04 Budget Alert (Manual HTML)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "budget-alert",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.body.percentage }}",
+              "operation": "largerEqual",
+              "value2": 75
+            }
+          ]
+        }
+      },
+      "name": "Percentage >= 75%",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst payload = input.body ?? input;\nconst escapeHtml = (value = '') => String(value).replace(/[&<>\"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[char]));\nconst percentage = escapeHtml(payload.percentage ?? '0');\nconst budget = escapeHtml(payload.budget ?? '0');\nconst spent = escapeHtml(payload.spent ?? '0');\n\nconst html = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <title>Budget Alert</title>\n</head>\n<body style=\"margin:0;padding:0;background-color:#111111;font-family:Arial,Helvetica,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#111111;padding:32px 0;\">\n    <tr>\n      <td align=\"center\">\n        <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:600px;width:calc(100% - 32px);background-color:#1A1A1A;border:1px solid #2F2F2F;border-radius:16px;overflow:hidden;\">\n          <tr>\n            <td style=\"padding:28px 28px 0 28px;\">\n              <p style=\"margin:0 0 12px 0;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#FACC15;\">Expendora</p>\n              <h1 style=\"margin:0;font-size:28px;line-height:1.2;color:#FFFFFF;\">Budget Alert</h1>\n              <p style=\"margin:12px 0 0 0;font-size:15px;line-height:1.7;color:#D1D5DB;\">You have used <strong>${percentage}%</strong> of your monthly budget.</p>\n            </td>\n          </tr>\n          <tr>\n            <td style=\"padding:24px 28px 28px 28px;\">\n              <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#111111;border:1px solid #333333;border-radius:14px;\">\n                <tr>\n                  <td style=\"padding:18px 20px;font-size:14px;line-height:1.7;color:#E5E7EB;\">\n                    <p style=\"margin:0 0 8px 0;\"><strong>Total Budget:</strong> ${budget}</p>\n                    <p style=\"margin:0;\"><strong>Spent So Far:</strong> ${spent}</p>\n                  </td>\n                </tr>\n              </table>\n              <p style=\"margin:18px 0 0 0;font-size:14px;line-height:1.7;color:#A3A3A3;\">Review your expenses to stay within your limit this month.</p>\n            </td>\n          </tr>\n        </table>\n      </td>\n    </tr>\n  </table>\n</body>\n</html>`;\n\nconst text = `Budget Alert\nYou have used ${percentage}% of your monthly budget.\nTotal Budget: ${budget}\nSpent So Far: ${spent}\nReview your expenses to stay within your limit this month.`;\n\nreturn [{ json: { emailHtml: html, emailText: text } }];"
+      },
+      "name": "Generate HTML Template",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 280]
+    },
+    {
+      "parameters": {
+        "fromEmail": "alerts@expendora.com",
+        "toEmail": "={{ $('Webhook Trigger').item.json.body.email }}",
+        "subject": "Budget Alert: You've reached 75% of your monthly budget!",
+        "emailFormat": "html",
+        "text": "={{ $json.emailText }}",
+        "html": "={{ $json.emailHtml }}",
+        "options": {}
+      },
+      "name": "Email Node",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [900, 280]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "logStatus",
+              "value": "Budget alert email sent"
+            },
+            {
+              "name": "userId",
+              "value": "={{ $('Webhook Trigger').item.json.body.userId }}"
+            },
+            {
+              "name": "percentage",
+              "value": "={{ $('Webhook Trigger').item.json.body.percentage }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "DB/Log Node",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1100, 280]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Percentage >= 75%",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Percentage >= 75%": {
+      "main": [
+        [
+          {
+            "node": "Generate HTML Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate HTML Template": {
+      "main": [
+        [
+          {
+            "node": "Email Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Node": {
+      "main": [
+        [
+          {
+            "node": "DB/Log Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}
