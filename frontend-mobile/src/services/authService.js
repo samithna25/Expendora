@@ -34,12 +34,13 @@ export const authService = {
   },
 
   async forgotPassword(email) {
-    return tryOrMock(() => api.post('/auth/forgot-password', { email }), { ok: true });
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
   },
 
-
   async resetPassword(token, password) {
-    return tryOrMock(() => api.post('/auth/reset-password', { token, password }), { ok: true });
+    const response = await api.post('/auth/reset-password', { token, password });
+    return response.data;
   },
 
   async changePassword({ currentPassword, newPassword }) {

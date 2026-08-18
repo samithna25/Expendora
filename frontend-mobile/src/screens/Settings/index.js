@@ -15,6 +15,8 @@ import { authService } from '../../services/authService';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export function SettingsScreen() {
   const { isDark, toggleTheme } = useTheme();
@@ -24,6 +26,7 @@ export function SettingsScreen() {
     numberFormatKey, setNumberFormat, numberFormat,
   } = useSettings();
   const { token } = useAuth();
+  const insets = useSafeAreaInsets();
   const cs = isDark ? 'dark' : 'light';
 
   const [modal, setModal] = useState(null); // 'currency' | 'font' | 'number' | 'password'
@@ -35,7 +38,7 @@ export function SettingsScreen() {
       style={[styles.container, { backgroundColor: themeColors.background[cs] }]}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 24) + 12 }]}>
         <Text style={[styles.title, { color: themeColors.foreground[cs], fontSize: 28 * fontSizeScale }]}>
           Settings
         </Text>

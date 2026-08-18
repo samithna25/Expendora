@@ -9,7 +9,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.database.db import get_db
 from app.models.user_model import create_user
+from app.services import email_service
 from app.services.n8n_service import trigger_password_reset_email
+from app.services.email_service import send_welcome_email
 from app.utils.jwt_utils import generate_token
 from app.utils.password_utils import hash_password
 import os
@@ -31,22 +33,7 @@ def validate_reset_password(password):
 FORGOT_PASSWORD_MESSAGE = (
     "If this email is registered, a password reset link has been sent."
 )
-def trigger_welcome_email(user_id, name, email):
-    """Fire-and-forget: POST to n8n welcome email webhook in a background thread."""
-    def _send():
-        try:
-            webhook_url = os.getenv('N8N_WEBHOOK_WELCOME', 'http://localhost:5678/webhook/expendora-welcome')
-            payload = {
-                'userId': user_id,
-                'name': name,
-                'email': email
-            }
-            print(f"[n8n] Triggering welcome email webhook → {webhook_url}")
-            response = requests.post(webhook_url, json=payload, timeout=5)
-            print(f"[n8n] Webhook response: {response.status_code} {response.text}")
-        except Exception as e:
-            print(f"[n8n] Webhook failed: {e}")
-    threading.Thread(target=_send, daemon=True).start()
+# Removed trigger_welcome_email wrapper because email_service already handles threading
 
 def register_user(data):
     if not data or 'email' not in data or 'password' not in data:
@@ -96,8 +83,8 @@ def register_user(data):
     session_id = str(session_result.inserted_id)
     token = generate_token(user_id, email, session_id=session_id)
 
-    # Trigger n8n welcome email workflow (non-blocking)
-    trigger_welcome_email(user_id, name, email)
+    # Trigger welcome email via code (non-blocking, uses thread internally)
+    send_welcome_email(email, name)
 
     return jsonify({
         'status': 'success',
@@ -322,12 +309,20 @@ def forgot_password(data):
                 "created_at": datetime.now(timezone.utc),
             })
 
-            trigger_password_reset_email(
-                email=email,
-                reset_token=plain_token,
-                expires_at=expires_at.isoformat(),
-                user_name=user.get("name", ""),
-            )
+            if email_service.email_mode_is_code():
+                email_service.send_password_reset_email(
+                    email=email,
+                    reset_token=plain_token,
+                    expires_at=expires_at.isoformat(),
+                    user_name=user.get("name", ""),
+                )
+            else:
+                trigger_password_reset_email(
+                    email=email,
+                    reset_token=plain_token,
+                    expires_at=expires_at.isoformat(),
+                    user_name=user.get("name", ""),
+                )
 
     return jsonify({
         "success": True,

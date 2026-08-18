@@ -143,6 +143,7 @@ def create_expense_route():
     try:
         from app.database.db import get_db
         from app.services.analytics_service import get_dashboard_analytics
+        from app.services import email_service
         from app.services.n8n_service import trigger_budget_alert_webhook
         from datetime import datetime
 
@@ -160,13 +161,22 @@ def create_expense_route():
                     percentage = round((spent / limit) * 100, 1)
 
                 if limit > 0 and percentage is not None and percentage >= 75:
-                    trigger_budget_alert_webhook(
-                        user_id=user_id,
-                        email=user["email"],
-                        budget=limit,
-                        spent=spent,
-                        percentage=percentage,
-                    )
+                    if email_service.email_mode_is_code():
+                        email_service.send_budget_alert(
+                            user_id=user_id,
+                            email=user["email"],
+                            budget=limit,
+                            spent=spent,
+                            percentage=percentage,
+                        )
+                    else:
+                        trigger_budget_alert_webhook(
+                            user_id=user_id,
+                            email=user["email"],
+                            budget=limit,
+                            spent=spent,
+                            percentage=percentage,
+                        )
     except Exception as e:
         print(f"Error triggering budget alert: {e}")
 
