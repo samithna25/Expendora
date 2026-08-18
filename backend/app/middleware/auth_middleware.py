@@ -2,7 +2,7 @@ import os
 from functools import wraps
 from flask import request, jsonify
 from bson import ObjectId
-from app.utils.jwt_utils import verify_token
+from app.utils.jwt_utils import verify_token, session_is_expired
 from app.database.db import get_db
 
 
@@ -57,6 +57,14 @@ def require_auth(f):
             return jsonify({
                 "success": False,
                 "message": "Session expired. You have been logged in from another device."
+            }), 401
+
+        # Defense-in-depth: reject sessions whose 20-day window has elapsed
+        if session_is_expired(session):
+            db.sessions.delete_one({"_id": session["_id"]})
+            return jsonify({
+                "success": False,
+                "message": "Session expired. Please log in again."
             }), 401
 
         request.current_user = payload

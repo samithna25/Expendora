@@ -12,8 +12,9 @@ from app.models.user_model import create_user
 from app.services import email_service
 from app.services.n8n_service import trigger_password_reset_email
 from app.services.email_service import send_welcome_email
-from app.utils.jwt_utils import generate_token
+from app.utils.jwt_utils import generate_token, generate_refresh_token, hash_refresh_token, session_is_expired
 from app.utils.password_utils import hash_password
+from app.config.config import Config
 import os
 import requests
 import threading
@@ -28,6 +29,20 @@ def validate_password(password):
 
 def validate_reset_password(password):
     return len(password) >= 8
+
+
+def create_session(db, user_id):
+    """Create a session doc with a 20-day expiry window and a refresh token."""
+    refresh_token = generate_refresh_token()
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(days=Config.SESSION_EXPIRY_DAYS)
+    session_result = db.sessions.insert_one({
+        "user_id": ObjectId(user_id),
+        "created_at": now,
+        "expires_at": expires_at,
+        "refresh_token_hash": hash_refresh_token(refresh_token),
+    })
+    return str(session_result.inserted_id), refresh_token
 
 
 FORGOT_PASSWORD_MESSAGE = (
@@ -76,11 +91,7 @@ def register_user(data):
     result = db.users.insert_one(user_data)
     user_id = str(result.inserted_id)
 
-    session_result = db.sessions.insert_one({
-        "user_id": ObjectId(user_id),
-        "created_at": datetime.now(timezone.utc)
-    })
-    session_id = str(session_result.inserted_id)
+    session_id, refresh_token = create_session(db, user_id)
     token = generate_token(user_id, email, session_id=session_id)
 
     # Trigger welcome email via code (non-blocking, uses thread internally)
@@ -96,7 +107,8 @@ def register_user(data):
                 'email': email,
                 'profile_picture': None
             },
-            'token': token
+            'token': token,
+            'refreshToken': refresh_token
         }
     }), 201
 
@@ -119,11 +131,7 @@ def login_user(data):
             # Delete all existing sessions → only this device stays logged in
             db.sessions.delete_many({"user_id": ObjectId(user_id)})
 
-            session_result = db.sessions.insert_one({
-                "user_id": ObjectId(user_id),
-                "created_at": datetime.now(timezone.utc)
-            })
-            session_id = str(session_result.inserted_id)
+            session_id, refresh_token = create_session(db, user_id)
 
             name = user.get('name', '')
             token = generate_token(user_id, email, session_id=session_id)
@@ -138,7 +146,8 @@ def login_user(data):
                         'monthly_budget': user.get('monthly_budget'),
                         'profile_picture': user.get('profile_picture'),
                     },
-                    'token': token
+                    'token': token,
+                    'refreshToken': refresh_token
                 }
             }), 200
         else:
@@ -271,6 +280,62 @@ def logout_user():
     return jsonify({
         'status': 'success',
         'message': 'Logged out successfully.'
+    }), 200
+
+
+def refresh_session(data):
+    """POST /auth/refresh — exchange a valid refresh token for a fresh access token."""
+    if not data or not data.get("refreshToken"):
+        return jsonify({
+            'status': 'error',
+            'message': 'Refresh token is required'
+        }), 400
+
+    refresh_token = data["refreshToken"]
+    db = get_db()
+    if db is None:
+        return jsonify({'status': 'error', 'message': 'Database connection failed'}), 500
+
+    session = db.sessions.find_one({"refresh_token_hash": hash_refresh_token(refresh_token)})
+    if not session:
+        return jsonify({
+            'status': 'error',
+            'message': 'Session expired. Please log in again.'
+        }), 401
+
+    if session_is_expired(session):
+        db.sessions.delete_one({"_id": session["_id"]})
+        return jsonify({
+            'status': 'error',
+            'message': 'Session expired. Please log in again.'
+        }), 401
+
+    user = db.users.find_one({"_id": session["user_id"]})
+    if not user:
+        db.sessions.delete_one({"_id": session["_id"]})
+        return jsonify({
+            'status': 'error',
+            'message': 'Session expired. Please log in again.'
+        }), 401
+
+    user_id = str(user["_id"])
+    email = user.get("email", "")
+
+    # Rotate the refresh token (the 20-day expiry window stays fixed from login).
+    new_refresh_token = generate_refresh_token()
+    db.sessions.update_one(
+        {"_id": session["_id"]},
+        {"$set": {"refresh_token_hash": hash_refresh_token(new_refresh_token)}}
+    )
+
+    token = generate_token(user_id, email, session_id=str(session["_id"]))
+    return jsonify({
+        'status': 'success',
+        'message': 'Token refreshed',
+        'data': {
+            'token': token,
+            'refreshToken': new_refresh_token
+        }
     }), 200
 
 

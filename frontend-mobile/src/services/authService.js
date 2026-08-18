@@ -19,6 +19,16 @@ export const authService = {
     return response.data;
   },
 
+  async refreshSession(refreshToken) {
+    const response = await api.post('/auth/refresh', { refreshToken });
+    return response.data;
+  },
+
+  async logout() {
+    const response = await api.post('/auth/logout');
+    return response.data;
+  },
+
   async getProfile(token) {
     const response = await api.get('/auth/profile');
     return response.data;

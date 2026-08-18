@@ -18,7 +18,7 @@ export function SessionExpiredOverlay({ onLoginPress }) {
         <Text style={styles.title}>Session Expired</Text>
 
         <Text style={styles.message}>
-          You have been logged in from another device.{'\n'}Please log in again to continue.
+          Your session has expired.{'\n'}Please log in again to continue.
         </Text>
 
         <TouchableOpacity style={styles.button} onPress={onLoginPress} activeOpacity={0.8}>

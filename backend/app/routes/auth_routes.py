@@ -7,6 +7,7 @@ from app.controllers.auth_controller import (
     update_profile,
     upload_profile_picture,
     logout_user,
+    refresh_session,
     forgot_password,
     reset_password,
     change_password,
@@ -26,6 +27,11 @@ def register():
 def login():
     data = request.get_json()
     return login_user(data)
+
+@auth_bp.route('/refresh', methods=['POST'])
+def refresh():
+    data = request.get_json()
+    return refresh_session(data)
 
 @auth_bp.route('/profile', methods=['GET'])
 @require_auth
