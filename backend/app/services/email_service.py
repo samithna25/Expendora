@@ -225,3 +225,42 @@ def _deliver_welcome_email(email, user_name=""):
     except Exception as exc:
         logger.exception("[welcome-email] unexpected error sending welcome email to %s: %s", email, exc)
 
+
+def send_monthly_report_email(user_id, email, user_name, month, pdf_bytes):
+    """Fire-and-forget: send the monthly report PDF via SMTP."""
+    threading.Thread(
+        target=_deliver_monthly_report_email,
+        args=(user_id, email, user_name, month, pdf_bytes),
+        daemon=True,
+    ).start()
+    return True
+
+
+def _deliver_monthly_report_email(user_id, email, user_name, month, pdf_bytes):
+    try:
+        subject = f"Your Monthly Spending Report - {month} 📊"
+        html_body = f"""
+        <html>
+        <body style="font-family: sans-serif; background-color: #1A1A1A; color: #FFFFFF; padding: 20px;">
+            <h2>Hi {user_name},</h2>
+            <p>Your monthly spending report for {month} is ready!</p>
+            <p>Please find your detailed PDF summary attached to this email.</p>
+            <br>
+            <p>Best regards,<br>The Expendora Team</p>
+        </body>
+        </html>
+        """
+        
+        attachments = [(f"Expendora_Report_{month}.pdf", pdf_bytes, "application/pdf")]
+        
+        ok = send_email(email, subject, html_body, attachments=attachments)
+        log_email_log(
+            "monthly-report",
+            user_id,
+            email,
+            subject,
+            status="sent" if ok else "failed",
+            error="" if ok else "email send failed",
+        )
+    except Exception as exc:
+        logger.exception("[monthly-report] unexpected error sending report to %s: %s", email, exc)

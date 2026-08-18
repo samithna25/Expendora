@@ -53,14 +53,13 @@ export function AuthProvider({ children }) {
 
   const loadStoredAuth = async () => {
     try {
-      const storedToken = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
-      if (storedToken) {
-        setToken(storedToken);
-        const userData = await authService.getProfile(storedToken);
-        setUser(userData);
-      }
-    } catch {
+      // The user requested to always load the sign in page when the app opens.
+      // Therefore, we do NOT restore the token, and we clear it.
       await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+      setToken(null);
+      setUser(null);
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
     }
