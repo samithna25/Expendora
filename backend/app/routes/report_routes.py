@@ -48,5 +48,20 @@ def generate_pdf():
     return download_monthly_pdf()
 
 
+@report_bp.route("/test-trigger", methods=["GET", "POST"])
+def test_trigger():
+    """Manual trigger to test the monthly report email job."""
+    from app.services.scheduler_service import process_monthly_reports
+    from flask import current_app
+    
+    from datetime import datetime, timezone
+    
+    current_month = datetime.now(timezone.utc).strftime("%Y-%m")
+    # Run synchronously to test, forcing current month so there is data!
+    process_monthly_reports(current_app._get_current_object(), test_month=current_month)
+    
+    return {"status": "success", "message": "Triggered monthly report job successfully."}
+
+
 def init_report_routes(app):
     app.register_blueprint(report_bp)
