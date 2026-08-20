@@ -9,11 +9,13 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, Image as ImageIcon, X, Sparkles, Zap, RotateCcw } from 'lucide-react-native';
+import { Camera, Image as ImageIcon, X, Sparkles, Zap, RotateCcw, Check } from 'lucide-react-native';
 import { ReceiptPreview } from '../../components/ReceiptPreview';
 import { uploadService } from '../../services/uploadService';
 import { expenseService } from '../../services/expenseService';
 import { useExpenses } from '../../context/ExpenseContext';
+import { useTheme } from '../../context/ThemeContext';
+import { useSettings } from '../../context/SettingsContext';
 import { colors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,6 +34,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
  *  - Navigates back
  */
 export function UploadReceiptScreen({ navigation }) {
+  const { isDark } = useTheme();
+  const { currency: userCurrency } = useSettings();
+  const colorScheme = isDark ? 'dark' : 'light';
   const [stage, setStage] = useState('camera'); // 'camera' | 'scanning' | 'preview' | 'saving'
   const [receiptData, setReceiptData] = useState(null);
   const [facing, setFacing] = useState('back');
@@ -116,6 +121,7 @@ export function UploadReceiptScreen({ navigation }) {
     const payload = {
       merchant: receiptData.merchant_name || 'Unknown Merchant',
       amount: Number(receiptData.amount) || 0,
+      currency: receiptData.currency || userCurrency?.code || 'LKR',
       // Backend expects Title Case: Food, Transport, Shopping, Bills, Entertainment, Other
       category: rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1),
       date: receiptData.date || new Date().toISOString().split('T')[0],
@@ -129,11 +135,7 @@ export function UploadReceiptScreen({ navigation }) {
       const created = response?.data ?? { id: Date.now().toString(), ...payload };
       addExpense(created);
 
-      Alert.alert(
-        'Expense Saved ✓',
-        `"${payload.merchant}" for $${payload.amount.toFixed(2)} has been added.`,
-        [{ text: 'OK', onPress: () => navigation?.goBack() }],
-      );
+      navigation?.goBack();
     } catch (err) {
       setStage('preview');
       Alert.alert(
