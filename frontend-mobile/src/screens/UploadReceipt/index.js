@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  Modal,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -42,7 +41,6 @@ export function UploadReceiptScreen({ navigation }) {
   const [receiptData, setReceiptData] = useState(null);
   const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions();
-  const [savedExpense, setSavedExpense] = useState(null);
   const cameraRef = useRef(null);
   const insets = useSafeAreaInsets();
 
@@ -137,7 +135,7 @@ export function UploadReceiptScreen({ navigation }) {
       const created = response?.data ?? { id: Date.now().toString(), ...payload };
       addExpense(created);
 
-      setSavedExpense(payload);
+      navigation?.goBack();
     } catch (err) {
       setStage('preview');
       Alert.alert(
@@ -155,42 +153,15 @@ export function UploadReceiptScreen({ navigation }) {
   // ─── Preview stage ────────────────────────────────────────────────────────
   if (stage === 'preview' || stage === 'saving') {
     return (
-      <>
-        <ReceiptPreview
-          data={receiptData}
-          saving={stage === 'saving'}
-          onClose={() => {
-            setReceiptData(null);
-            setStage('camera');
-          }}
-          onSave={handleSaveExpense}
-        />
-        {/* Success Modal */}
-        <Modal transparent visible={!!savedExpense} animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { backgroundColor: colors.card[colorScheme] }]}>
-              <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(74, 222, 128, 0.1)' }]}>
-                <Check size={32} color={colors.success} />
-              </View>
-              <Text style={[styles.modalTitle, { color: colors.foreground[colorScheme] }]}>
-                Expense Saved
-              </Text>
-              <Text style={[styles.modalMessage, { color: colors.muted[colorScheme] }]}>
-                "{savedExpense?.merchant}" for {savedExpense?.currency} {savedExpense?.amount?.toFixed(2)} has been added.
-              </Text>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: colors.gold }]}
-                onPress={() => {
-                  setSavedExpense(null);
-                  navigation?.goBack();
-                }}
-              >
-                <Text style={styles.modalButtonText}>OK</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      </>
+      <ReceiptPreview
+        data={receiptData}
+        saving={stage === 'saving'}
+        onClose={() => {
+          setReceiptData(null);
+          setStage('camera');
+        }}
+        onSave={handleSaveExpense}
+      />
     );
   }
 
@@ -481,55 +452,5 @@ const styles = StyleSheet.create({
   galleryFallbackText: {
     fontSize: 13,
     color: colors.gold,
-  },
-
-  // ─── Modal ─────────────────────────────────────────────────────────────
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '80%',
-    borderRadius: borderRadius['3xl'],
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  modalIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  modalMessage: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  modalButton: {
-    width: '100%',
-    paddingVertical: 14,
-    borderRadius: borderRadius['2xl'],
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.black,
   },
 });
